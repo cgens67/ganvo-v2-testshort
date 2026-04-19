@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,8 +40,7 @@ import {
   X, ListMusic, Mic2, MoreVertical, Info, Heart, ChevronDown,
   ChevronUp, ExternalLink, History, Library, UserCircle2, LogOut,
   Maximize, Minimize, Settings, TrendingUp, ListPlus, Disc3, MicVocal,
-  ArrowLeft, Palette, LayoutTemplate, CornerUpRight, MousePointerClick, 
-  SlidersHorizontal, Hand, RefreshCw
+  ArrowLeft, Palette, LayoutTemplate, CornerUpRight, Hand, RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -55,13 +54,11 @@ const firebaseConfig = {
   appId: "1:1083596663051:web:52900f44e84034b7421a0e"
 };
 
-// Safely initialize Firebase for Vercel Next.js SSR
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = typeof window !== "undefined" ? getAuth(app) : null;
 const db = typeof window !== "undefined" ? getFirestore(app) : null;
 const googleProvider = typeof window !== "undefined" ? new GoogleAuthProvider() : null;
 
-// --- INTERFACES ---
 interface Song {
   videoId: string
   title: string
@@ -89,80 +86,67 @@ interface LyricsData {
 }
 
 export function AudioPlayer() {
-  // UI & Player States
   const [isDark, setIsDark] = useState(false)
-  const[isFullscreen, setIsFullscreen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const[searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Song[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const[isSearching, setIsSearching] = useState(false)
   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const [searchHistory, setSearchHistory] = useState<string[]>([])
-  const [queue, setQueue] = useState<Song[]>([])
-  const[currentIndex, setCurrentIndex] = useState(0)
+  const[queue, setQueue] = useState<Song[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(80)
-  const[isMuted, setIsMuted] = useState(false)
+  const[volume, setVolume] = useState(80)
+  const [isMuted, setIsMuted] = useState(false)
   const [shuffle, setShuffle] = useState(false)
   const[repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const[isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(-1)
-  
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   
-  // Tabs & Navigation
-  const[activeTab, setActiveTab] = useState<'queue' | 'lyrics' | 'library' | 'explore' | 'artist'>('explore')
-  
-  // Mobile Expanded Player States
-  const[isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
-  const [mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
+  const [activeTab, setActiveTab] = useState<'queue' | 'lyrics' | 'library' | 'explore' | 'artist'>('explore')
+  const [isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
+  const[mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
 
-  // Artist & Explore View States
-  const[exploreArtists, setExploreArtists] = useState<any[]>([])
-  const [isExploreLoading, setIsExploreLoading] = useState(true)
+  const [exploreArtists, setExploreArtists] = useState<any[]>([])
+  const[isExploreLoading, setIsExploreLoading] = useState(true)
   const [currentArtistData, setCurrentArtistData] = useState<any>(null)
   const [isArtistLoading, setIsArtistLoading] = useState(false)
 
-  // Dialog States
-  const [showAboutDialog, setShowAboutDialog] = useState(false)
-  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const[showAboutDialog, setShowAboutDialog] = useState(false)
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
-  const [showPlayerSettings, setShowPlayerSettings] = useState(false)
+  const[showPlayerSettings, setShowPlayerSettings] = useState(false)
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState("")
   
-  // Customization Settings
-  const [dynamicTheme, setDynamicTheme] = useState(true)
-  const[swipeToChange, setSwipeToChange] = useState(true)
+  const[dynamicTheme, setDynamicTheme] = useState(true)
+  const [swipeToChange, setSwipeToChange] = useState(true)
   const [rotateLyricsBg, setRotateLyricsBg] = useState(true)
   
-  // Auth States
-  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const[isSignUp, setIsSignUp] = useState(false)
+  const[password, setPassword] = useState("")
+  const [isSignUp, setIsSignUp] = useState(false)
   const [authError, setAuthError] = useState("")
-  const[displayNameInput, setDisplayNameInput] = useState("")
+  const [displayNameInput, setDisplayNameInput] = useState("")
   
-  // Data States
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
-  const [savedSongs, setSavedSongs] = useState<Song[]>([])
+  const[savedSongs, setSavedSongs] = useState<Song[]>([])
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [searchFocused, setSearchFocused] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
-  const lyricsContainerRef = useRef<HTMLDivElement>(null)
-  const lyricsContainerRefMobile = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const searchContainerRef = useRef<HTMLDivElement>(null)
 
   const currentSong = queue[currentIndex]
 
-  // --- FULLSCREEN LOGIC ---
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(err => console.error(err))
@@ -177,7 +161,6 @@ export function AudioPlayer() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   },[])
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     try {
       const history = localStorage.getItem('ganvo_search_history')
@@ -192,7 +175,6 @@ export function AudioPlayer() {
       .finally(() => setIsExploreLoading(false))
   },[])
 
-  // --- FIREBASE AUTH & FIRESTORE SYNC ---
   useEffect(() => {
     if (!auth || !db) return
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -241,7 +223,6 @@ export function AudioPlayer() {
     }
   }
 
-  // --- AUTH METHODS ---
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthError("")
@@ -257,7 +238,7 @@ export function AudioPlayer() {
       setPassword("")
     } catch (error: any) {
       if (error.code === 'auth/operation-not-allowed') {
-        setAuthError("Email/Password login is not enabled. Go to Firebase Console -> Authentication -> Sign-in Method and enable 'Email/Password'.")
+        setAuthError("Email/Password login is not enabled in Firebase Console.")
       } else if (error.code === 'auth/invalid-credential') {
         setAuthError("Incorrect email or password.")
       } else if (error.code === 'auth/email-already-in-use') {
@@ -275,11 +256,7 @@ export function AudioPlayer() {
       await signInWithPopup(auth, googleProvider)
       setShowAuthDialog(false)
     } catch (error: any) {
-      if (error.code === 'auth/operation-not-allowed') {
-        setAuthError("Google login is not enabled. Go to Firebase Console -> Authentication -> Sign-in Method and enable 'Google'.")
-      } else {
-        setAuthError(error.message.replace("Firebase: ", ""))
-      }
+      setAuthError(error.message.replace("Firebase: ", ""))
     }
   }
 
@@ -296,7 +273,6 @@ export function AudioPlayer() {
     }
   }
 
-  // --- PLAYLIST METHODS ---
   const handleCreatePlaylist = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newPlaylistName.trim()) return
@@ -312,7 +288,7 @@ export function AudioPlayer() {
     const updatedPlaylists = playlists.map(p => {
       if (p.id === playlistId) {
         if (!p.songs.find(s => s.videoId === song.videoId)) {
-          return { ...p, songs:[...p.songs, song] }
+          return { ...p, songs: [...p.songs, song] }
         }
       }
       return p
@@ -321,7 +297,6 @@ export function AudioPlayer() {
     syncToCloud(savedSongs, updatedPlaylists)
   }
 
-  // --- ARTIST VIEW LOGIC ---
   const loadArtistView = async (artistId: string) => {
     setIsArtistLoading(true)
     setActiveTab('artist')
@@ -337,12 +312,10 @@ export function AudioPlayer() {
     }
   }
 
-  // Toggle dark mode
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark)
   }, [isDark])
 
-  // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
@@ -354,7 +327,6 @@ export function AudioPlayer() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   },[])
 
-  // Debounced auto-search while typing
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
 
@@ -365,7 +337,6 @@ export function AudioPlayer() {
     }
 
     setIsSearching(true)
-    
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         const response = await fetch(`/api/music/search?q=${encodeURIComponent(searchQuery)}`)
@@ -383,7 +354,6 @@ export function AudioPlayer() {
     }
   }, [searchQuery])
 
-  // Add song to queue and play
   const addToQueueAndPlay = async (song: Song) => {
     const saveSearchStr = searchQuery || song.title
     if (saveSearchStr.trim()) {
@@ -409,7 +379,6 @@ export function AudioPlayer() {
     addToQueueAndPlay(song)
   }
 
-  // Load audio stream when song changes
   useEffect(() => {
     if (!currentSong) return
 
@@ -442,7 +411,6 @@ export function AudioPlayer() {
     loadStream()
   }, [currentSong?.videoId])
 
-  // Load lyrics
   useEffect(() => {
     if (!currentSong) return
 
@@ -469,7 +437,6 @@ export function AudioPlayer() {
     loadLyrics()
   }, [currentSong?.videoId])
 
-  // Auto-play when audio URL is ready
   useEffect(() => {
     if (audioUrl && audioRef.current) {
       audioRef.current.src = audioUrl
@@ -481,7 +448,7 @@ export function AudioPlayer() {
     }
   },[audioUrl])
 
-  // Update lyrics scroll
+  // --- MATHEMATICAL LYRICS AUTO-SCROLLING (Flawless center tracking) ---
   useEffect(() => {
     if (!lyrics?.syncedLyrics) return
     const lyric = lyrics.syncedLyrics.findLast((l) => l.time <= currentTime)
@@ -489,15 +456,21 @@ export function AudioPlayer() {
 
     if (index !== currentLyricIndex) {
       setCurrentLyricIndex(index)
+      
+      // Auto-scroll logic utilizing standard DOM scrollTo for perfectly smooth tracking
       if (index >= 0) {
-        if (lyricsContainerRef.current) {
-          const lyricElements = lyricsContainerRef.current.querySelectorAll(".lyric-line")
-          lyricElements[index]?.scrollIntoView({ behavior: "smooth", block: "center" })
-        }
-        if (lyricsContainerRefMobile.current) {
-          const lyricElements = lyricsContainerRefMobile.current.querySelectorAll(".lyric-line")
-          lyricElements[index]?.scrollIntoView({ behavior: "smooth", block: "center" })
-        }
+        // Use timeout to let the class 'lyric-active-line' apply to the DOM first
+        setTimeout(() => {
+          const activeLines = document.querySelectorAll('.lyric-active-line');
+          activeLines.forEach((line) => {
+            const container = line.closest('.lyrics-scroll-container') as HTMLElement;
+            if (container && line instanceof HTMLElement) {
+              // Calculate exact center position
+              const scrollPos = line.offsetTop - (container.clientHeight / 2) + (line.clientHeight / 2);
+              container.scrollTo({ top: scrollPos, behavior: 'smooth' });
+            }
+          })
+        }, 50)
       }
     }
   },[currentTime, lyrics, currentLyricIndex])
@@ -590,7 +563,6 @@ export function AudioPlayer() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  // Force fetch stream logic directly overriding state to guarantee it restarts
   const handleRetryStream = async () => {
     if (!currentSong) return;
     setLoadError(null);
@@ -663,8 +635,8 @@ export function AudioPlayer() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               className={cn(
-                "h-11 md:h-12 w-full rounded-full border-0 bg-muted/80 pl-12 pr-12 text-base shadow-none transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]",
-                "focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-card focus-visible:shadow-lg text-foreground",
+                "h-11 md:h-12 w-full rounded-full border-0 bg-muted/80 pl-12 pr-12 text-base shadow-none transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] text-foreground",
+                "focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-card focus-visible:shadow-lg",
                 searchFocused && "bg-card shadow-lg ring-2 ring-primary scale-[1.01]"
               )}
             />
@@ -686,7 +658,7 @@ export function AudioPlayer() {
               <div className={cn("flex-1 overflow-y-auto min-h-0 overscroll-contain transition-all duration-500", isSearchExpanded ? "max-h-[70vh]" : "max-h-[400px]")}>
                 <div className="p-2">
                   {searchQuery.trim() === "" ? (
-                    <div className="animate-in fade-in duration-300">
+                    <div className="animate-in fade-in duration-500">
                       <div className="flex items-center justify-between px-3 py-2">
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent Searches</span>
                         <button onMouseDown={(e) => e.preventDefault()} onClick={() => { setSearchHistory([]); localStorage.removeItem('ganvo_search_history') }} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">Clear</button>
@@ -704,7 +676,7 @@ export function AudioPlayer() {
                       <span className="ml-3 text-muted-foreground font-medium">Searching...</span>
                     </div>
                   ) : (
-                    <div className="animate-in fade-in duration-300">
+                    <div className="animate-in fade-in duration-500">
                       {searchResults.slice(0, isSearchExpanded ? undefined : 6).map((song, index) => (
                         <button key={song.videoId} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToQueueAndPlay(song) }} className="song-card active:scale-[0.98] flex w-full items-center gap-4 rounded-xl p-3 text-left transition-all duration-300 ease-out hover:bg-secondary/60 text-foreground" style={{ animationDelay: `${index * 30}ms` }}>
                           <img src={song.thumbnail || "/placeholder.svg"} alt={song.title} className="h-12 w-12 rounded-lg object-cover shadow-sm transition-transform duration-500 hover:scale-110" />
@@ -791,7 +763,7 @@ export function AudioPlayer() {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden min-h-0 bg-background/50 relative">
         
-        {/* Left Side / Main View Area */}
+        {/* Left Side / Main View Area (Hidden on Mobile when Player Expanded) */}
         <div className="flex flex-1 flex-col overflow-y-auto min-h-0 z-10 pb-40 lg:pb-0 transition-all duration-500 ease-out">
           
           {/* Explore / Top Artists View */}
@@ -927,7 +899,6 @@ export function AudioPlayer() {
                       "aspect-square w-full max-w-[320px] mx-auto overflow-hidden relative transition-all duration-700 ease-out shadow-2xl mb-8",
                       dynamicTheme ? "rounded-[2rem]" : "rounded-2xl",
                       isPlaying && "scale-[1.02] shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
-                      // On mobile, if we are in this view but they tapped lyrics/library, we'd normally hide it. 
                       (activeTab === 'lyrics' || activeTab === 'library') && "hidden lg:block"
                     )}
                   >
@@ -976,21 +947,21 @@ export function AudioPlayer() {
 
                   {/* Playback Controls */}
                   <div className="mb-8 flex items-center justify-center gap-4 sm:gap-6 w-full">
-                    <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full transition-all duration-300 active:scale-90", shuffle ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><Shuffle className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center", shuffle ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><Shuffle className="h-5 w-5 text-current" /></Button>
                     <Button variant="ghost" size="icon" onClick={playPrevious} className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center text-foreground"><SkipBack className="h-7 w-7 fill-current text-current" /></Button>
                     <Button onClick={togglePlay} disabled={isLoading || !audioUrl} className={cn("h-16 w-16 sm:h-20 sm:w-20 rounded-[2rem] bg-primary text-primary-foreground shadow-xl transition-all duration-400 ease-out hover:scale-110 active:scale-90 flex items-center justify-center", isPlaying && "scale-105 rounded-[1.5rem]")}>
                       {isLoading ? <Loader2 className="h-7 w-7 animate-spin text-current" /> : isPlaying ? <Pause className="h-7 w-7 fill-current text-current" /> : <Play className="h-7 w-7 fill-current text-current translate-x-[2px]" />}
                     </Button>
                     <Button variant="ghost" size="icon" onClick={playNext} className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center text-foreground"><SkipForward className="h-7 w-7 fill-current text-current" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full transition-all duration-300 active:scale-90", repeatMode !== "off" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-                      {repeatMode === "one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
+                    <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center", repeatMode !== "off" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+                      {repeatMode === "one" ? <Repeat1 className="h-5 w-5 text-current" /> : <Repeat className="h-5 w-5 text-current" />}
                     </Button>
                   </div>
 
                   {/* Volume Control */}
                   <div className="flex w-full items-center justify-between gap-3 px-2">
                     <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
-                      <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground"><VolumeIcon className="h-5 w-5" /></Button>
+                      <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground"><VolumeIcon className="h-5 w-5 text-current" /></Button>
                       <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10" />
                       <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
                     </div>
@@ -1014,7 +985,7 @@ export function AudioPlayer() {
           )}
         </div>
 
-        {/* Desktop Sidebar - Queue, Lyrics, Library, Explore */}
+        {/* Desktop Sidebar - Queue, Lyrics, Library */}
         <div className="hidden w-80 flex-col border-l border-border/40 bg-card/40 backdrop-blur-2xl lg:flex xl:w-[420px] overflow-hidden min-h-0 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-20 transition-all duration-500">
           <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40 flex-wrap transition-colors duration-300">
             {['explore', 'queue', 'lyrics', 'library'].map((tab) => (
@@ -1043,19 +1014,19 @@ export function AudioPlayer() {
                 <p className="text-sm text-muted-foreground mt-2">Check the main view to discover new artists.</p>
               </div>
             ) : activeTab === 'lyrics' ? (
-              <div ref={lyricsContainerRef} className="p-6">
+              <div className="h-full overflow-y-auto no-scrollbar scroll-smooth lyrics-scroll-container pb-32">
                 {lyrics?.syncedLyrics ? (
-                  <div className="space-y-5 pb-32">
+                  <div className="space-y-5 p-6">
                     {lyrics.syncedLyrics.map((line, index) => (
-                      <p key={index} onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-2xl px-5 py-3 text-xl font-bold leading-relaxed", index === currentLyricIndex ? "scale-[1.03] bg-primary/10 text-primary shadow-sm origin-left" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95 origin-left" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95 origin-left")}>
+                      <p key={index} onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-2xl px-4 py-3 text-lg font-bold leading-relaxed text-center", index === currentLyricIndex ? "lyric-active-line scale-[1.03] bg-primary/10 text-primary shadow-sm" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95")}>
                         {line.text}
                       </p>
                     ))}
                   </div>
                 ) : lyrics?.plainLyrics ? (
-                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-medium text-lg animate-in fade-in duration-500 pb-32">{lyrics.plainLyrics}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-medium text-base text-center animate-in fade-in duration-500 p-6">{lyrics.plainLyrics}</p>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center h-full"><Mic2 className="h-10 w-10 text-muted-foreground/40 mb-6" /><p className="font-extrabold text-xl mb-2 text-foreground">No lyrics found</p></div>
+                  <div className="flex flex-col items-center justify-center h-full p-6 text-center"><Mic2 className="h-10 w-10 text-muted-foreground/40 mb-6" /><p className="font-extrabold text-xl mb-2 text-foreground">No lyrics found</p></div>
                 )}
               </div>
             ) : activeTab === 'library' ? (
@@ -1086,21 +1057,35 @@ export function AudioPlayer() {
                   {/* Liked Songs Section */}
                   <div>
                     <div className="mb-4 px-2 flex items-center justify-between">
-                      <h3 className="font-bold text-lg flex items-center gap-2 text-foreground"><Heart className="h-5 w-5 text-[var(--google-red)]"/> Liked Songs</h3>
+                      <h3 className="font-bold text-lg flex items-center gap-2 text-foreground"><Heart className="h-5 w-5 text-[var(--google-red)] fill-current"/> Liked Songs</h3>
                     </div>
                     {savedSongs.length > 0 ? (
                       <div className="space-y-2">
                         {savedSongs.map((song, index) => (
                           <div key={`lib-${song.videoId}-${index}`} className="group flex items-center gap-3 rounded-2xl p-2 transition-all duration-300 hover:bg-muted">
                             <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-3 text-left outline-none">
-                              <img src={song.thumbnail} className="h-12 w-12 rounded-xl object-cover shadow-sm transition-transform duration-500 group-hover:scale-105" />
+                              <img src={song.thumbnail} className="aspect-square w-12 rounded-xl object-cover shadow-sm transition-transform duration-500 group-hover:scale-105" />
                               <div className="flex-1 overflow-hidden">
                                 <p className="truncate text-sm font-bold leading-tight text-foreground transition-colors">{song.title}</p>
                                 <p className="truncate text-xs font-medium text-muted-foreground mt-0.5 transition-colors">{song.artist}</p>
                               </div>
                             </button>
+                            {/* Playlist Add Button Dropdown */}
+                            {playlists.length > 0 && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><ListPlus className="h-4 w-4 text-current" /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="rounded-2xl">
+                                  <DropdownMenuItem disabled className="font-bold text-xs uppercase text-muted-foreground">Add to Playlist</DropdownMenuItem>
+                                  {playlists.map(pl => (
+                                    <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-2">{pl.name}</DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                             <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-8 w-8 text-[var(--google-red)] opacity-100 flex items-center justify-center transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90">
-                              <Heart className="h-5 w-5 fill-current text-current transition-transform duration-500 hover:scale-110" />
+                              <Heart className="h-4 w-4 fill-current text-current transition-transform duration-500 hover:scale-110" />
                             </Button>
                           </div>
                         ))}
@@ -1122,7 +1107,7 @@ export function AudioPlayer() {
                           <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5">{song.artist}</p>
                         </div>
                       </button>
-                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100"><X className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100"><X className="h-4 w-4 text-current" /></Button>
                     </div>
                   ))
                 ) : (
@@ -1137,7 +1122,7 @@ export function AudioPlayer() {
       {/* --- EXPANDABLE MOBILE PLAYER OVERLAY --- */}
       <div 
         className={cn(
-          "fixed inset-0 z-[200] bg-background/95 backdrop-blur-3xl flex flex-col transition-transform duration-400 ease-out lg:hidden",
+          "fixed inset-0 z-[200] bg-background/95 backdrop-blur-3xl flex flex-col transition-transform duration-500 ease-out lg:hidden",
           isMobilePlayerExpanded ? "translate-y-0" : "translate-y-full"
         )}
       >
@@ -1158,8 +1143,8 @@ export function AudioPlayer() {
         <div className="flex-1 overflow-y-auto min-h-0 relative px-6 pb-6 pt-4 flex flex-col">
           {mobilePlayerTab === 'player' && currentSong && (
             <div className="flex flex-col items-center h-full animate-in fade-in zoom-in-95 duration-500 flex-1 justify-center">
-              {/* Responsive Album Art */}
-              <div className="w-[85vw] max-w-[320px] aspect-square mx-auto overflow-hidden rounded-[2rem] shadow-2xl relative mb-8">
+              {/* Responsive Square Album Art */}
+              <div className="aspect-square w-[85vw] max-w-[320px] mx-auto overflow-hidden rounded-[2rem] shadow-2xl relative mb-8">
                  <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s]", isPlaying ? "scale-105" : "scale-100")} />
                  {isLoading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-md">
@@ -1179,7 +1164,7 @@ export function AudioPlayer() {
               </div>
 
               <div className="w-full mb-8">
-                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-2" />
+                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-2" />
                 <div className="flex justify-between text-sm font-bold text-muted-foreground">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
@@ -1187,31 +1172,31 @@ export function AudioPlayer() {
               </div>
 
               <div className="flex items-center justify-between w-full mb-8 px-2">
-                <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full", shuffle && "bg-primary/20 text-primary")}><Shuffle className="h-6 w-6" /></Button>
-                <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 rounded-full text-foreground"><SkipBack className="h-8 w-8 fill-current text-current" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full flex items-center justify-center", shuffle && "bg-primary/20 text-primary")}><Shuffle className="h-6 w-6 text-current" /></Button>
+                <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 rounded-full text-foreground flex items-center justify-center"><SkipBack className="h-8 w-8 fill-current text-current" /></Button>
                 <Button onClick={togglePlay} className="h-20 w-20 rounded-[2rem] bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform active:scale-95 flex items-center justify-center">
-                   {isPlaying ? <Pause className="h-8 w-8 fill-current text-current" /> : <Play className="h-8 w-8 fill-current text-current translate-x-[2px]" />}
+                   {isPlaying ? <Pause className="h-8 w-8 fill-primary-foreground text-primary-foreground" /> : <Play className="h-8 w-8 fill-primary-foreground text-primary-foreground translate-x-[2px]" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 rounded-full text-foreground"><SkipForward className="h-8 w-8 fill-current text-current" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full", repeatMode !== "off" && "bg-primary/20 text-primary")}>
-                  {repeatMode === "one" ? <Repeat1 className="h-6 w-6" /> : <Repeat className="h-6 w-6" />}
+                <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 rounded-full text-foreground flex items-center justify-center"><SkipForward className="h-8 w-8 fill-current text-current" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full flex items-center justify-center", repeatMode !== "off" && "bg-primary/20 text-primary")}>
+                  {repeatMode === "one" ? <Repeat1 className="h-6 w-6 text-current" /> : <Repeat className="h-6 w-6 text-current" />}
                 </Button>
               </div>
             </div>
           )}
 
           {mobilePlayerTab === 'lyrics' && (
-             <div className="h-full overflow-y-auto pb-32">
+             <div className="h-full overflow-y-auto no-scrollbar scroll-smooth lyrics-scroll-container pb-32">
                 {lyrics?.syncedLyrics ? (
                   <div className="space-y-6 py-10">
                     {lyrics.syncedLyrics.map((line, index) => (
-                      <p key={index} onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-3xl px-6 py-4 text-3xl font-extrabold leading-tight", index === currentLyricIndex ? "scale-[1.03] bg-primary/10 text-primary shadow-sm origin-left" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95 origin-left" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95 origin-left")}>
+                      <p key={index} onClick={() => { if (audioRef.current) audioRef.current.currentTime = line.time }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-2xl px-4 py-3 text-xl font-bold leading-tight text-center", index === currentLyricIndex ? "lyric-active-line scale-[1.05] bg-primary/10 text-primary shadow-sm" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95")}>
                         {line.text}
                       </p>
                     ))}
                   </div>
                 ) : lyrics?.plainLyrics ? (
-                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-semibold text-2xl animate-in fade-in duration-500 py-10 px-2">{lyrics.plainLyrics}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-semibold text-lg text-center animate-in fade-in duration-500 py-10 px-2">{lyrics.plainLyrics}</p>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full"><Mic2 className="h-16 w-16 text-muted-foreground/40 mb-6" /><p className="font-extrabold text-2xl mb-2 text-foreground">No lyrics found</p></div>
                 )}
@@ -1225,13 +1210,13 @@ export function AudioPlayer() {
                   {queue.map((song, index) => (
                     <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-4 rounded-2xl p-3 transition-all duration-300", index === currentIndex ? "bg-primary/10 shadow-sm border border-primary/20" : "hover:bg-muted/80")}>
                       <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-4 text-left outline-none min-w-0">
-                        <img src={song.thumbnail} className="h-16 w-16 rounded-xl object-cover shadow-sm flex-shrink-0" />
+                        <img src={song.thumbnail} className="h-16 w-16 aspect-square rounded-xl object-cover shadow-sm flex-shrink-0" />
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p className={cn("truncate text-base font-bold", index === currentIndex ? "text-primary" : "text-foreground")}>{song.title}</p>
                           <p className="truncate text-sm font-semibold text-muted-foreground mt-0.5">{song.artist}</p>
                         </div>
                       </button>
-                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10"><X className="h-5 w-5" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10"><X className="h-5 w-5 text-current" /></Button>
                     </div>
                   ))}
                 </div>
