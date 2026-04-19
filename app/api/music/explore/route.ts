@@ -26,7 +26,8 @@ export async function GET() {
   try {
     await ensureInitialized()
     
-    const[artistsRes, songsRes, albumsRes] = await Promise.all([
+    // Fetch multiple categories concurrently for a rich Explore page
+    const [artistsRes, songsRes, albumsRes] = await Promise.all([
       ytmusic.searchArtists("Top Global Artists"),
       ytmusic.searchSongs("Top Global Hits"),
       ytmusic.searchAlbums("Top Albums 2024")
@@ -50,7 +51,7 @@ export async function GET() {
     }))
 
     const albums = albumsRes.slice(0, 15).map(a => ({
-      albumId: a.browseId,
+      browseId: a.browseId,
       title: a.name,
       artist: a.artist?.name || 'Unknown Artist',
       year: a.year || '',
