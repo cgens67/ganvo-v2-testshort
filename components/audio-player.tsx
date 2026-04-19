@@ -41,7 +41,7 @@ import {
   ChevronUp, ExternalLink, History, Library, UserCircle2, LogOut,
   Maximize, Minimize, Settings, TrendingUp, ListPlus, Disc3, MicVocal,
   ArrowLeft, Palette, LayoutTemplate, CornerUpRight, MousePointerClick, 
-  SlidersHorizontal, Hand, RefreshCw, ChevronRight
+  SlidersHorizontal, Hand, RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -55,6 +55,7 @@ const firebaseConfig = {
   appId: "1:1083596663051:web:52900f44e84034b7421a0e"
 };
 
+// Safely initialize Firebase for Vercel Next.js SSR
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = typeof window !== "undefined" ? getAuth(app) : null;
 const db = typeof window !== "undefined" ? getFirestore(app) : null;
@@ -87,59 +88,60 @@ interface LyricsData {
 }
 
 export function AudioPlayer() {
-  const[isDark, setIsDark] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+  const[isFullscreen, setIsFullscreen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<Song[]>([])
+  const[searchResults, setSearchResults] = useState<Song[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const[isSearchExpanded, setIsSearchExpanded] = useState(false)
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [queue, setQueue] = useState<Song[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const[currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const[currentTime, setCurrentTime] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(80)
   const [isMuted, setIsMuted] = useState(false)
   const [shuffle, setShuffle] = useState(false)
-  const [repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
+  const[repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const[isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(-1)
-  
   const[audioUrl, setAudioUrl] = useState<string | null>(null)
   
   const [activeTab, setActiveTab] = useState<'queue' | 'lyrics' | 'library' | 'explore' | 'artist'>('explore')
   const [isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
   const[mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
 
+  // --- CRASH PROTECTED STATES ---
   const [exploreData, setExploreData] = useState<{artists: any[], songs: Song[], albums: any[]}>({artists: [], songs: [], albums:[]})
-  const [isExploreLoading, setIsExploreLoading] = useState(true)
-  const[currentArtistData, setCurrentArtistData] = useState<any>(null)
-  const [isArtistLoading, setIsArtistLoading] = useState(false)
+  const[isExploreLoading, setIsExploreLoading] = useState(true)
+  const [exploreError, setExploreError] = useState(false)
+  const [currentArtistData, setCurrentArtistData] = useState<any>(null)
+  const[isArtistLoading, setIsArtistLoading] = useState(false)
 
-  const [showAboutDialog, setShowAboutDialog] = useState(false)
-  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const[showAboutDialog, setShowAboutDialog] = useState(false)
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
-  const [showPlayerSettings, setShowPlayerSettings] = useState(false)
-  const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
+  const[showPlayerSettings, setShowPlayerSettings] = useState(false)
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState("")
   
   const [dynamicTheme, setDynamicTheme] = useState(true)
-  const[swipeToChange, setSwipeToChange] = useState(true)
+  const [swipeToChange, setSwipeToChange] = useState(true)
   const [rotateLyricsBg, setRotateLyricsBg] = useState(true)
   
-  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [email, setEmail] = useState("")
-  const[password, setPassword] = useState("")
+  const [password, setPassword] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
   const [authError, setAuthError] = useState("")
   const [displayNameInput, setDisplayNameInput] = useState("")
   
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
-  const[savedSongs, setSavedSongs] = useState<Song[]>([])
+  const [savedSongs, setSavedSongs] = useState<Song[]>([])
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [searchFocused, setSearchFocused] = useState(false)
 
@@ -172,10 +174,20 @@ export function AudioPlayer() {
     } catch (e) {}
 
     setIsExploreLoading(true)
+    setExploreError(false)
     fetch('/api/music/explore')
       .then(res => res.json())
-      .then(data => { if (data) setExploreData(data) })
-      .catch(console.error)
+      .then(data => { 
+        if (data && !data.error && data.artists && data.songs && data.albums) {
+          setExploreData(data) 
+        } else {
+          setExploreError(true)
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+        setExploreError(true)
+      })
       .finally(() => setIsExploreLoading(false))
   },[])
 
@@ -195,7 +207,7 @@ export function AudioPlayer() {
           }
           if (data.playlists) setPlaylists(data.playlists)
         } else {
-          await setDoc(userRef, { savedSongs: [], playlists:[] })
+          await setDoc(userRef, { savedSongs:[], playlists:[] })
         }
       } else {
         const saved = localStorage.getItem('ganvo_saved_songs')
@@ -296,7 +308,7 @@ export function AudioPlayer() {
     const updatedPlaylists = playlists.map(p => {
       if (p.id === playlistId) {
         if (!p.songs.find(s => s.videoId === song.videoId)) {
-          return { ...p, songs: [...p.songs, song] }
+          return { ...p, songs:[...p.songs, song] }
         }
       }
       return p
@@ -312,9 +324,14 @@ export function AudioPlayer() {
     try {
       const res = await fetch(`/api/music/artist/${artistId}`)
       const data = await res.json()
-      setCurrentArtistData(data)
+      if (data && !data.error) {
+        setCurrentArtistData(data)
+      } else {
+        setCurrentArtistData(null)
+      }
     } catch (e) {
       console.error(e)
+      setCurrentArtistData(null)
     } finally {
       setIsArtistLoading(false)
     }
@@ -322,7 +339,7 @@ export function AudioPlayer() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark)
-  },[isDark])
+  }, [isDark])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -337,11 +354,13 @@ export function AudioPlayer() {
 
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+
     if (!searchQuery.trim()) {
       setSearchResults([])
       setIsSearching(false)
       return
     }
+
     setIsSearching(true)
     searchTimeoutRef.current = setTimeout(async () => {
       try {
@@ -354,7 +373,10 @@ export function AudioPlayer() {
         setIsSearching(false)
       }
     }, 300)
-    return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current) }
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    }
   }, [searchQuery])
 
   const addToQueueAndPlay = async (song: Song) => {
@@ -486,7 +508,7 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex(nextIndex)
-  },[queue.length, currentIndex, shuffle, repeatMode])
+  }, [queue.length, currentIndex, shuffle, repeatMode])
 
   const playPrevious = useCallback(() => {
     if (queue.length === 0) return
@@ -525,7 +547,7 @@ export function AudioPlayer() {
   const toggleLike = async (song: Song) => {
     setLikedSongs((prev) => {
       const next = new Set(prev)
-      let newSaved =[...savedSongs]
+      let newSaved = [...savedSongs]
       if (next.has(song.videoId)) {
         next.delete(song.videoId)
         newSaved = newSaved.filter(s => s.videoId !== song.videoId)
@@ -593,7 +615,6 @@ export function AudioPlayer() {
 
       {/* Header - Expressive M3 style */}
       <header className="elevation-1 z-40 flex h-16 flex-shrink-0 items-center justify-between px-3 md:px-6 transition-all duration-500 ease-out relative bg-background/90 backdrop-blur-xl border-b border-border/40 gap-2">
-        {/* Left side logo - Shrinks smoothly on mobile search focus */}
         <div className={cn(
           "flex items-center shrink-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-left overflow-hidden", 
           searchFocused ? "w-0 opacity-0 md:w-auto md:opacity-100 gap-0 md:gap-3" : "w-auto opacity-100 gap-3"
@@ -677,7 +698,7 @@ export function AudioPlayer() {
               {searchQuery.trim() !== "" && searchResults.length > 6 && (
                 <div className="flex-shrink-0 border-t bg-card/80 backdrop-blur-md p-2">
                   <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsSearchExpanded(!isSearchExpanded) }} className="w-full justify-center gap-2 rounded-lg hover:bg-primary/10 text-foreground transition-all duration-300 active:scale-[0.98]">
-                    {isSearchExpanded ? <><ChevronUp className="h-4 w-4 transition-transform duration-300 text-current" />Show less</> : <><ChevronDown className="h-4 w-4 transition-transform duration-300 text-current" />Show all {searchResults.length} results</>}
+                    {isSearchExpanded ? <><ChevronUp className="h-4 w-4 transition-transform duration-300" />Show less</> : <><ChevronDown className="h-4 w-4 transition-transform duration-300" />Show all {searchResults.length} results</>}
                   </Button>
                 </div>
               )}
@@ -688,7 +709,7 @@ export function AudioPlayer() {
         {/* Right side buttons */}
         <div className="flex items-center gap-1 md:gap-2 shrink-0">
           <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="hidden sm:flex h-10 w-10 rounded-full text-foreground transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-muted hover:scale-110 active:scale-90">
-            {isFullscreen ? <Minimize className="h-5 w-5 text-current" /> : <Maximize className="h-5 w-5 text-current" />}
+            {isFullscreen ? <Minimize className="h-5 w-5 fill-current" /> : <Maximize className="h-5 w-5 fill-current" />}
           </Button>
 
           <DropdownMenu>
@@ -699,7 +720,7 @@ export function AudioPlayer() {
                     {user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0) || "U"}
                   </div>
                 ) : (
-                  <UserCircle2 className="h-5 w-5 text-current" />
+                  <UserCircle2 className="h-5 w-5" />
                 )}
               </Button>
             </DropdownMenuTrigger>
@@ -731,7 +752,7 @@ export function AudioPlayer() {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer gap-3 rounded-xl py-2.5 font-medium text-destructive focus:text-destructive transition-colors active:scale-[0.98]">
-                    <LogOut className="h-4 w-4 text-current" /> Sign Out
+                    <LogOut className="h-4 w-4" /> Sign Out
                   </DropdownMenuItem>
                 </>
               )}
@@ -757,9 +778,15 @@ export function AudioPlayer() {
                    <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
                    <p className="font-bold text-lg text-muted-foreground">Discovering Music...</p>
                  </div>
+               ) : exploreError ? (
+                 <div className="flex flex-col items-center justify-center py-32 text-center">
+                    <TrendingUp className="h-16 w-16 text-muted-foreground/40 mb-6" />
+                    <p className="font-extrabold text-2xl mb-2 text-foreground">Explore Unavailable</p>
+                    <p className="text-sm font-medium text-muted-foreground max-w-[300px]">Servers are temporarily busy. Use the search bar to find music.</p>
+                 </div>
                ) : (
                  <div className="space-y-12">
-                   {exploreData.artists.length > 0 && (
+                   {exploreData?.artists?.length > 0 && (
                      <div>
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><Users className="h-6 w-6 text-primary"/> Top Artists</h3>
                        <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar px-1">
@@ -778,7 +805,7 @@ export function AudioPlayer() {
                        </div>
                      </div>
                    )}
-                   {exploreData.songs.length > 0 && (
+                   {exploreData?.songs?.length > 0 && (
                      <div>
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><TrendingUp className="h-6 w-6 text-primary"/> Top Songs</h3>
                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -797,7 +824,7 @@ export function AudioPlayer() {
                        </div>
                      </div>
                    )}
-                   {exploreData.albums.length > 0 && (
+                   {exploreData?.albums?.length > 0 && (
                      <div>
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><Disc3 className="h-6 w-6 text-primary"/> Top Albums</h3>
                        <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar px-1">
@@ -915,7 +942,6 @@ export function AudioPlayer() {
                       "aspect-square w-full max-w-[320px] mx-auto overflow-hidden relative transition-all duration-700 ease-out shadow-2xl mb-8",
                       dynamicTheme ? "rounded-[2rem]" : "rounded-2xl",
                       isPlaying && "scale-[1.02] shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
-                      // On mobile, if we are in this view but they tapped lyrics/library, we'd normally hide it. 
                       (activeTab === 'lyrics' || activeTab === 'library') && "hidden lg:block"
                     )}
                   >
@@ -954,7 +980,7 @@ export function AudioPlayer() {
                       max={duration || 100}
                       step={0.1}
                       onValueChange={handleSeek}
-                      className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
+                      className="mb-3 cursor-grab active:cursor-grabbing[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
                     />
                     <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70">
                       <span>{formatTime(currentTime)}</span>
@@ -984,7 +1010,6 @@ export function AudioPlayer() {
                     </div>
                   </div>
                   
-                  {/* Invisible spacer block so you can scroll far past the floating player */}
                   <div className="h-40 shrink-0 lg:hidden w-full opacity-0 pointer-events-none" />
                 </div>
               ) : (
@@ -1181,7 +1206,7 @@ export function AudioPlayer() {
               </div>
 
               <div className="w-full mb-8">
-                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-2" />
+                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-2" />
                 <div className="flex justify-between text-sm font-bold text-muted-foreground">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
@@ -1192,7 +1217,7 @@ export function AudioPlayer() {
                 <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full flex items-center justify-center", shuffle ? "bg-primary/20 text-primary" : "text-foreground")}><Shuffle className="h-6 w-6 text-current" /></Button>
                 <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 rounded-full text-foreground flex items-center justify-center"><SkipBack className="h-8 w-8 fill-current text-current" /></Button>
                 <Button onClick={togglePlay} className="h-20 w-20 rounded-[2rem] bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform active:scale-95 flex items-center justify-center">
-                   {isPlaying ? <Pause className="h-8 w-8 fill-current text-current" /> : <Play className="h-8 w-8 fill-current text-current translate-x-[2px]" />}
+                   {isPlaying ? <Pause className="h-8 w-8 fill-primary-foreground text-primary-foreground" /> : <Play className="h-8 w-8 fill-primary-foreground text-primary-foreground translate-x-[2px]" />}
                 </Button>
                 <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 rounded-full text-foreground flex items-center justify-center"><SkipForward className="h-8 w-8 fill-current text-current" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full flex items-center justify-center", repeatMode !== "off" ? "bg-primary/20 text-primary" : "text-foreground")}>
@@ -1247,7 +1272,7 @@ export function AudioPlayer() {
         <div className="fixed bottom-4 left-4 right-4 z-50 transition-all duration-500 ease-out lg:hidden">
           <div onClick={() => setIsMobilePlayerExpanded(true)} className="flex items-center gap-3 rounded-[2rem] bg-card/95 p-2.5 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgba(0,0,0,0.2)] transition-all duration-500 cursor-pointer active:scale-[0.98]">
             <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-[1.25rem] shadow-sm">
-              <img src={currentSong.thumbnail || "/placeholder.svg"} className={cn("h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.2,0,0,1)]", isPlaying ? "scale-110" : "scale-100")} />
+              <img src={currentSong.thumbnail || "/placeholder.svg"} className={cn("h-full w-full object-cover transition-transform duration-700 ease-out", isPlaying ? "scale-110" : "scale-100")} />
             </div>
             <div className="flex-1 overflow-hidden flex flex-col justify-center px-1">
               <p className="truncate text-sm font-extrabold leading-tight transition-colors text-foreground">{currentSong.title}</p>
