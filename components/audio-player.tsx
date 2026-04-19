@@ -108,7 +108,7 @@ export function AudioPlayer() {
   const [savedSongs, setSavedSongs] = useState<Song[]>([])
   const [user, setUser] = useState<User | null>(null)
   
-  const[searchFocused, setSearchFocused] = useState(false)
+  const [searchFocused, setSearchFocused] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const lyricsContainerRef = useRef<HTMLDivElement>(null)
@@ -191,7 +191,7 @@ export function AudioPlayer() {
         clearTimeout(searchTimeoutRef.current)
       }
     }
-  }, [searchQuery])
+  },[searchQuery])
 
   // Add song to queue and play
   const addToQueueAndPlay = async (song: Song) => {
@@ -247,7 +247,7 @@ export function AudioPlayer() {
     }
 
     loadStream()
-  }, [currentSong?.videoId])
+  },[currentSong?.videoId])
 
   // Load lyrics when song changes
   useEffect(() => {
@@ -322,7 +322,7 @@ export function AudioPlayer() {
         }
       }
     }
-  },[currentTime, lyrics, currentLyricIndex])
+  }, [currentTime, lyrics, currentLyricIndex])
 
   // Audio event handlers
   const handleTimeUpdate = () => {
@@ -376,7 +376,7 @@ export function AudioPlayer() {
     }
 
     setCurrentIndex(nextIndex)
-  }, [queue.length, currentIndex, shuffle, repeatMode])
+  },[queue.length, currentIndex, shuffle, repeatMode])
 
   const playPrevious = useCallback(() => {
     if (queue.length === 0) return
@@ -470,6 +470,38 @@ export function AudioPlayer() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
+  // Force fetch stream logic directly overriding state to guarantee it restarts
+  const handleRetryStream = async () => {
+    if (!currentSong) return;
+    setLoadError(null);
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`/api/music/stream/${currentSong.videoId}`);
+      const data = await response.json();
+      
+      if (data.audioUrl) {
+        setAudioUrl(data.audioUrl);
+        if (audioRef.current) {
+          audioRef.current.src = data.audioUrl;
+          audioRef.current.load();
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => setIsPlaying(true)).catch(e => {
+              if (e.name !== 'AbortError') setLoadError("Playback failed. Try another song.");
+            });
+          }
+        }
+      } else {
+        setLoadError(data.error || "Failed to load stream");
+      }
+    } catch (e) {
+      setLoadError("Network error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
 
   const showSearchDropdown = searchFocused && (searchResults.length > 0 || isSearching || (searchQuery.trim() === "" && searchHistory.length > 0))
@@ -484,7 +516,7 @@ export function AudioPlayer() {
         onEnded={handleEnded}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onError={() => setLoadError("Audio playback error. Try another song.")}
+        onError={() => setLoadError("Stream expired. Please retry connection.")}
       />
 
       {/* Header - Expressive M3 style */}
@@ -538,7 +570,7 @@ export function AudioPlayer() {
             >
               <div 
                 className={cn(
-                  "flex-1 overflow-y-auto min-h-0 overscroll-contain transition-all duration-500",
+                  "flex-1 overflow-y-auto min-h-0 overscroll-contain transition-all",
                   isSearchExpanded ? "max-h-[70vh]" : "max-h-[400px]"
                 )}
               >
@@ -621,16 +653,16 @@ export function AudioPlayer() {
                       e.stopPropagation()
                       setIsSearchExpanded(!isSearchExpanded)
                     }}
-                    className="w-full justify-center gap-2 rounded-lg hover:bg-primary/10 transition-all duration-300 active:scale-[0.98]"
+                    className="w-full justify-center gap-2 rounded-lg hover:bg-primary/10 transition-all active:scale-[0.98]"
                   >
                     {isSearchExpanded ? (
                       <>
-                        <ChevronUp className="h-4 w-4 transition-transform duration-500" />
+                        <ChevronUp className="h-4 w-4" />
                         Show less
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="h-4 w-4 transition-transform duration-500" />
+                        <ChevronDown className="h-4 w-4" />
                         Show all {searchResults.length} results
                       </>
                     )}
@@ -649,7 +681,7 @@ export function AudioPlayer() {
             onClick={() => setIsDark(!isDark)}
             className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-muted hover:scale-110 active:scale-90"
           >
-            {isDark ? <Sun className="h-5 w-5 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]" /> : <Moon className="h-5 w-5 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]" />}
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
           <DropdownMenu>
@@ -660,7 +692,7 @@ export function AudioPlayer() {
                     {user.name.charAt(0)}
                   </div>
                 ) : (
-                  <UserCircle2 className="h-5 w-5 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]" />
+                  <UserCircle2 className="h-5 w-5" />
                 )}
               </Button>
             </DropdownMenuTrigger>
@@ -675,10 +707,10 @@ export function AudioPlayer() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Account</p>
                   <Button 
                     onClick={() => setShowAuthDialog(true)} 
-                    className="w-full justify-start rounded-xl font-semibold transition-all active:scale-[0.98]" 
+                    className="w-full justify-start rounded-xl font-semibold" 
                     size="sm"
                   >
-                    Sign In to save Library
+                    Sign In Profile
                   </Button>
                 </div>
               )}
@@ -707,8 +739,8 @@ export function AudioPlayer() {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden min-h-0 bg-background/50 relative">
-        {/* Player Area - Added huge padding bottom (pb-32) to fix floating player overlapping */}
-        <div className="flex flex-1 flex-col overflow-y-auto min-h-0 z-10 pb-32 lg:pb-0 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]">
+        {/* Player Area - Added huge padding bottom (pb-48) to fix floating player overlapping */}
+        <div className="flex flex-1 flex-col overflow-y-auto min-h-0 z-10 pb-48 lg:pb-0 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]">
           <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 md:px-8">
             {currentSong ? (
               <div className="m3-fade-in flex w-full max-w-[480px] flex-col items-center animate-in fade-in zoom-in-95 duration-500 ease-[cubic-bezier(0.2,0,0,1)]">
@@ -745,18 +777,7 @@ export function AudioPlayer() {
                         <Button 
                           size="sm" 
                           variant="secondary"
-                          onClick={() => {
-                            setLoadError(null)
-                            setIsLoading(true)
-                            fetch(`/api/music/stream/${currentSong.videoId}`)
-                              .then(r => r.json())
-                              .then(data => {
-                                if (data.audioUrl) setAudioUrl(data.audioUrl)
-                                else setLoadError(data.error || "Failed to load")
-                              })
-                              .catch(() => setLoadError("Network error"))
-                              .finally(() => setIsLoading(false))
-                          }}
+                          onClick={handleRetryStream}
                           className="mt-2 transition-transform active:scale-95 rounded-xl font-semibold"
                         >
                           Retry Connection
@@ -807,7 +828,7 @@ export function AudioPlayer() {
                             </p>
                           ) : (
                             <div className="flex flex-col items-center justify-center py-20 text-center h-full animate-in fade-in zoom-in duration-500">
-                              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-5 transition-transform duration-500 hover:scale-110">
+                              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-5">
                                 <Mic2 className="h-10 w-10 text-muted-foreground/50" />
                               </div>
                               <p className="font-bold text-xl">No lyrics found</p>
@@ -823,29 +844,29 @@ export function AudioPlayer() {
                   {activeTab === 'library' && (
                     <div className="lg:hidden w-full h-[45vh] min-h-[300px] bg-card/95 backdrop-blur-2xl rounded-[2rem] border shadow-2xl flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500 ease-[cubic-bezier(0.2,0,0,1)] relative z-20 overflow-hidden">
                       <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
-                        <h3 className="font-bold text-lg flex items-center gap-2"><Library className="h-5 w-5 text-primary transition-transform duration-500"/> Your Library</h3>
-                        {!user && <span className="text-xs font-semibold bg-destructive/10 text-destructive px-2 py-1 rounded-full">Not saved securely</span>}
+                        <h3 className="font-bold text-lg flex items-center gap-2"><Library className="h-5 w-5 text-primary"/> Your Library</h3>
+                        {!user && <span className="text-xs font-semibold bg-destructive/10 text-destructive px-2 py-1 rounded-full">Local</span>}
                       </div>
                       <div className="flex-1 overflow-y-auto min-h-0">
                         <div className="p-3 space-y-2">
                           {savedSongs.length > 0 ? (
                             savedSongs.map((song, index) => (
-                              <div key={`lib-mob-${song.videoId}-${index}`} className="flex items-center gap-3 rounded-xl p-2 bg-muted/30 hover:bg-muted transition-colors duration-300">
+                              <div key={`lib-mob-${song.videoId}-${index}`} className="flex items-center gap-3 rounded-xl p-2 bg-muted/30 hover:bg-muted transition-colors">
                                 <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-3 text-left">
-                                  <img src={song.thumbnail} alt={song.title} className="h-12 w-12 rounded-lg object-cover shadow-sm transition-transform duration-500 hover:scale-110" />
+                                  <img src={song.thumbnail} alt={song.title} className="h-12 w-12 rounded-lg object-cover shadow-sm" />
                                   <div className="flex-1 overflow-hidden">
-                                    <p className="truncate text-sm font-bold transition-colors">{song.title}</p>
+                                    <p className="truncate text-sm font-bold">{song.title}</p>
                                     <p className="truncate text-xs font-medium text-muted-foreground">{song.artist}</p>
                                   </div>
                                 </button>
-                                <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-8 w-8 text-destructive hover:bg-destructive/10 transition-transform active:scale-90">
-                                  <Heart className="h-4 w-4 fill-current transition-transform duration-500 hover:scale-110" />
+                                <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-8 w-8 text-[var(--google-red)] hover:bg-[var(--google-red)]/10">
+                                  <Heart className="h-4 w-4 fill-current" />
                                 </Button>
                               </div>
                             ))
                           ) : (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
-                              <Heart className="h-12 w-12 text-muted-foreground/30 mb-4 transition-transform duration-500 hover:scale-110" />
+                              <Heart className="h-12 w-12 text-muted-foreground/30 mb-4" />
                               <p className="font-bold text-lg mb-1">Library is empty</p>
                               <p className="text-sm font-medium text-muted-foreground px-4">Like a song to add it to your library.</p>
                             </div>
@@ -858,10 +879,10 @@ export function AudioPlayer() {
                 </div>
 
                 {/* Song Info */}
-                <div className="mb-8 flex w-full items-center gap-4 px-2 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]">
+                <div className="mb-8 flex w-full items-center gap-4 px-2">
                   <div className="flex-1 overflow-hidden text-center">
-                    <h2 className="mb-1 truncate text-2xl font-extrabold tracking-tight sm:text-3xl transition-colors">{currentSong.title}</h2>
-                    <p className="truncate text-base font-semibold text-muted-foreground/80 transition-colors">{currentSong.artist}</p>
+                    <h2 className="mb-1 truncate text-2xl font-extrabold tracking-tight sm:text-3xl">{currentSong.title}</h2>
+                    <p className="truncate text-base font-semibold text-muted-foreground/80">{currentSong.artist}</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -872,62 +893,62 @@ export function AudioPlayer() {
                       likedSongs.has(currentSong.videoId) && "text-[var(--google-red)] hover:text-[var(--google-red)] hover:bg-[var(--google-red)]/10"
                     )}
                   >
-                    <Heart className={cn("h-6 w-6 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]", likedSongs.has(currentSong.videoId) && "fill-current scale-110 drop-shadow-md")} />
+                    <Heart className={cn("h-6 w-6 transition-all duration-500", likedSongs.has(currentSong.videoId) && "fill-current scale-110 drop-shadow-md")} />
                   </Button>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-8 w-full px-2 transition-all duration-500">
+                <div className="mb-8 w-full px-2">
                   <Slider
                     value={[currentTime]}
                     max={duration || 100}
                     step={0.1}
                     onValueChange={handleSeek}
-                    className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-[cubic-bezier(0.2,0,0,1)] [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2 [&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
+                    className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary[&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-200[&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2 [&_[data-slot=thumb]]:hover:scale-150[&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
                   />
-                  <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70 transition-colors">
+                  <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
                   </div>
                 </div>
 
-                {/* Playback Controls */}
+                {/* Playback Controls (Resized & Refined Perfect Centering) */}
                 <div className="mb-8 flex items-center justify-center gap-4 sm:gap-6 w-full">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setShuffle(!shuffle)}
                     className={cn(
-                      "h-12 w-12 rounded-full transition-all duration-300 active:scale-90",
+                      "h-12 w-12 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center",
                       shuffle ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    <Shuffle className="h-5 w-5 transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)]" />
+                    <Shuffle className="h-5 w-5" />
                   </Button>
 
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={playPrevious} 
-                    className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75"
+                    className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center"
                   >
-                    <SkipBack className="h-7 w-7 fill-current text-foreground transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)]" />
+                    <SkipBack className="h-7 w-7 fill-current text-foreground" />
                   </Button>
 
                   <Button
                     onClick={togglePlay}
                     disabled={isLoading || !audioUrl}
                     className={cn(
-                      "h-16 w-16 sm:h-20 sm:w-20 rounded-[2rem] bg-primary text-primary-foreground shadow-xl transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] hover:scale-110 hover:shadow-2xl hover:shadow-primary/30 active:scale-90",
+                      "h-16 w-16 sm:h-20 sm:w-20 rounded-[2rem] bg-primary text-primary-foreground shadow-xl transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] hover:scale-110 hover:shadow-2xl hover:shadow-primary/30 active:scale-90 flex items-center justify-center",
                       isPlaying && "scale-105 rounded-[1.5rem]"
                     )}
                   >
                     {isLoading ? (
                       <Loader2 className="h-7 w-7 sm:h-8 sm:w-8 animate-spin" />
                     ) : isPlaying ? (
-                      <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current transition-transform duration-500" />
+                      <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />
                     ) : (
-                      <Play className="h-7 w-7 sm:h-8 sm:w-8 fill-current pl-1.5 transition-transform duration-500" />
+                      <Play className="h-7 w-7 sm:h-8 sm:w-8 fill-current translate-x-[2px]" />
                     )}
                   </Button>
 
@@ -935,9 +956,9 @@ export function AudioPlayer() {
                     variant="ghost" 
                     size="icon" 
                     onClick={playNext} 
-                    className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75"
+                    className="h-14 w-14 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center"
                   >
-                    <SkipForward className="h-7 w-7 fill-current text-foreground transition-transform duration-500 ease-[cubic-bezier(0.2,0,0,1)]" />
+                    <SkipForward className="h-7 w-7 fill-current text-foreground" />
                   </Button>
 
                   <Button
@@ -945,11 +966,11 @@ export function AudioPlayer() {
                     size="icon"
                     onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")}
                     className={cn(
-                      "h-12 w-12 rounded-full transition-all duration-300 active:scale-90",
+                      "h-12 w-12 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center",
                       repeatMode !== "off" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {repeatMode === "one" ? <Repeat1 className="h-5 w-5 transition-transform duration-500" /> : <Repeat className="h-5 w-5 transition-transform duration-500" />}
+                    {repeatMode === "one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
                   </Button>
                 </div>
 
@@ -960,48 +981,51 @@ export function AudioPlayer() {
                       variant="ghost" 
                       size="icon" 
                       onClick={toggleMute} 
-                      className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90"
+                      className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform hover:scale-110 active:scale-90"
                     >
-                      <VolumeIcon className="h-5 w-5 transition-transform duration-500" />
+                      <VolumeIcon className="h-5 w-5" />
                     </Button>
                     <Slider
                       value={[isMuted ? 0 : volume]}
                       max={100}
                       step={1}
                       onValueChange={handleVolumeChange}
-                      className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:transition-transform[&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:h-4[&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5[&_[data-slot=track]]:bg-foreground/10"
+                      className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10"
                     />
-                    <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground transition-colors">{isMuted ? 0 : volume}%</span>
+                    <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
                   </div>
 
                   {/* Mobile Nav Toggle */}
-                  <div className="flex lg:hidden bg-muted/60 backdrop-blur-sm rounded-2xl p-1 gap-1 transition-all duration-300">
+                  <div className="flex lg:hidden bg-muted/60 backdrop-blur-sm rounded-2xl p-1 gap-1">
                     <Button
                       variant={activeTab === 'lyrics' ? 'default' : 'ghost'}
                       size="icon"
                       onClick={() => setActiveTab(activeTab === 'lyrics' ? 'queue' : 'lyrics')}
-                      className={cn("h-11 w-11 rounded-xl transition-all duration-300 active:scale-90", activeTab === 'lyrics' && "shadow-md")}
+                      className={cn("h-11 w-11 rounded-xl transition-all active:scale-90", activeTab === 'lyrics' && "shadow-md")}
                     >
-                      <Mic2 className="h-5 w-5 transition-transform duration-500" />
+                      <Mic2 className="h-5 w-5" />
                     </Button>
                     <Button
                       variant={activeTab === 'library' ? 'default' : 'ghost'}
                       size="icon"
                       onClick={() => setActiveTab(activeTab === 'library' ? 'queue' : 'library')}
-                      className={cn("h-11 w-11 rounded-xl transition-all duration-300 active:scale-90", activeTab === 'library' && "shadow-md")}
+                      className={cn("h-11 w-11 rounded-xl transition-all active:scale-90", activeTab === 'library' && "shadow-md")}
                     >
-                      <Library className="h-5 w-5 transition-transform duration-500" />
+                      <Library className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
+                
+                {/* Mobile Spacer Block to Guarantee Scrolling Past Floating Player */}
+                <div className="h-32 shrink-0 lg:hidden w-full" />
               </div>
             ) : (
               <div className="flex flex-col items-center px-4 text-center animate-in fade-in zoom-in-95 duration-700 ease-[cubic-bezier(0.2,0,0,1)]">
-                <div className="mb-8 flex h-40 w-40 items-center justify-center rounded-[2.5rem] bg-muted/50 shadow-inner transition-all duration-700 hover:scale-105">
-                  <Music2 className="h-20 w-20 text-muted-foreground/40 transition-transform duration-700" />
+                <div className="mb-8 flex h-40 w-40 items-center justify-center rounded-[2.5rem] bg-muted/50 shadow-inner">
+                  <Music2 className="h-20 w-20 text-muted-foreground/40" />
                 </div>
-                <h2 className="mb-3 text-3xl font-extrabold tracking-tight transition-colors">Discover Music</h2>
-                <p className="max-w-xs text-base font-medium text-muted-foreground/80 leading-relaxed transition-colors">
+                <h2 className="mb-3 text-3xl font-extrabold tracking-tight">Discover Music</h2>
+                <p className="max-w-xs text-base font-medium text-muted-foreground/80 leading-relaxed">
                   Search for your favorite songs, artists, or albums to start building your queue.
                 </p>
               </div>
@@ -1010,53 +1034,53 @@ export function AudioPlayer() {
         </div>
 
         {/* Desktop Sidebar - Queue, Lyrics, Library */}
-        <div className="hidden w-80 flex-col border-l border-border/40 bg-card/40 backdrop-blur-2xl lg:flex xl:w-[420px] overflow-hidden min-h-0 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-20 transition-all duration-500">
+        <div className="hidden w-80 flex-col border-l border-border/40 bg-card/40 backdrop-blur-2xl lg:flex xl:w-[420px] overflow-hidden min-h-0 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-20">
           {/* Tabs */}
-          <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40 transition-colors duration-300">
+          <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40">
             <button
               onClick={() => setActiveTab('queue')}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] active:scale-95",
+                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 active:scale-95",
                 activeTab === 'queue'
                   ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <ListMusic className="h-4 w-4 transition-transform duration-500" />
-              Queue <span className="bg-muted px-1.5 py-0.5 rounded-md text-[10px] font-black transition-colors">{queue.length}</span>
+              <ListMusic className="h-4 w-4" />
+              Queue <span className="bg-muted px-1.5 py-0.5 rounded-md text-[10px] font-black">{queue.length}</span>
             </button>
             <button
               onClick={() => setActiveTab('lyrics')}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] active:scale-95",
+                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 active:scale-95",
                 activeTab === 'lyrics'
                   ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <Mic2 className="h-4 w-4 transition-transform duration-500" />
+              <Mic2 className="h-4 w-4" />
               Lyrics
             </button>
             <button
               onClick={() => setActiveTab('library')}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] active:scale-95",
+                "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 active:scale-95",
                 activeTab === 'library'
                   ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <Library className="h-4 w-4 transition-transform duration-500" />
+              <Library className="h-4 w-4" />
               Library
             </button>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain transition-all duration-500">
+          <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
             {activeTab === 'lyrics' ? (
               <div ref={lyricsContainerRef} className="p-6">
                 {lyrics?.syncedLyrics ? (
-                  <div className="space-y-5 pb-32">
+                  <div className="space-y-5 pb-20">
                     {lyrics.syncedLyrics.map((line, index) => (
                       <p
                         key={index}
@@ -1079,20 +1103,20 @@ export function AudioPlayer() {
                     ))}
                   </div>
                 ) : lyrics?.plainLyrics ? (
-                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-medium text-lg animate-in fade-in duration-500 pb-32">
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground font-medium text-lg animate-in fade-in duration-500 pb-20">
                     {lyrics.plainLyrics}
                   </p>
                 ) : currentSong ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500 pb-32">
-                    <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6 transition-transform duration-500 hover:scale-110">
+                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500">
+                    <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
                       <Mic2 className="h-10 w-10 text-muted-foreground/40" />
                     </div>
                     <p className="font-extrabold text-xl mb-2">No lyrics found</p>
                     <p className="text-sm font-medium text-muted-foreground max-w-[200px]">We searched everywhere, but couldn't find lyrics for this track.</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500 pb-32">
-                    <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6 transition-transform duration-500 hover:scale-110">
+                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500">
+                    <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6">
                       <Music2 className="h-10 w-10 text-muted-foreground/40" />
                     </div>
                     <p className="font-extrabold text-xl mb-2">Nothing playing</p>
@@ -1101,7 +1125,7 @@ export function AudioPlayer() {
                 )}
               </div>
             ) : activeTab === 'library' ? (
-               <div className="p-4 space-y-2 pb-32">
+               <div className="p-4 space-y-2 pb-20">
                   <div className="mb-4 px-2 flex items-center justify-between">
                     <h3 className="font-bold text-lg">Liked Songs</h3>
                     {!user && <span className="text-xs font-semibold bg-destructive/10 text-destructive px-2.5 py-1 rounded-md">Local Only</span>}
@@ -1110,32 +1134,32 @@ export function AudioPlayer() {
                     savedSongs.map((song, index) => (
                       <div key={`lib-${song.videoId}-${index}`} className="group flex items-center gap-3 rounded-2xl p-2 transition-all duration-300 hover:bg-muted">
                         <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-3 text-left outline-none">
-                          <img src={song.thumbnail} alt={song.title} className="h-14 w-14 rounded-xl object-cover shadow-sm transition-transform duration-500 group-hover:scale-105" />
+                          <img src={song.thumbnail} alt={song.title} className="h-14 w-14 rounded-xl object-cover shadow-sm transition-transform duration-300 group-hover:scale-105" />
                           <div className="flex-1 overflow-hidden">
-                            <p className="truncate text-sm font-bold leading-tight transition-colors">{song.title}</p>
-                            <p className="truncate text-xs font-medium text-muted-foreground mt-0.5 transition-colors">{song.artist}</p>
+                            <p className="truncate text-sm font-bold leading-tight">{song.title}</p>
+                            <p className="truncate text-xs font-medium text-muted-foreground mt-0.5">{song.artist}</p>
                           </div>
                         </button>
-                        <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-10 w-10 text-[var(--google-red)] opacity-100 transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90">
-                          <Heart className="h-5 w-5 fill-current transition-transform duration-500 hover:scale-110" />
+                        <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-10 w-10 text-[var(--google-red)] opacity-100 transition-all hover:bg-[var(--google-red)]/10 active:scale-90">
+                          <Heart className="h-5 w-5 fill-current" />
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500 pb-32">
-                      <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6 transition-transform duration-500 hover:scale-110">
+                    <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500">
+                      <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6">
                         <Heart className="h-10 w-10 text-muted-foreground/40" />
                       </div>
                       <p className="font-extrabold text-xl mb-2">Your library is empty</p>
                       <p className="text-sm font-medium text-muted-foreground max-w-[220px]">Like songs to build your personal collection.</p>
                       {!user && (
-                        <Button onClick={() => setShowAuthDialog(true)} className="mt-6 rounded-xl font-bold transition-transform duration-300 active:scale-95">Sign in to sync</Button>
+                        <Button onClick={() => setShowAuthDialog(true)} className="mt-6 rounded-xl font-bold">Sign In to sync</Button>
                       )}
                     </div>
                   )}
                </div>
             ) : (
-              <div className="p-3 space-y-2 pb-32">
+              <div className="p-3 space-y-2 pb-20">
                 {queue.length > 0 ? (
                   queue.map((song, index) => (
                     <div
@@ -1168,29 +1192,29 @@ export function AudioPlayer() {
                         <div className="flex-1 overflow-hidden">
                           <p
                             className={cn(
-                              "truncate text-sm font-bold leading-tight transition-colors duration-300",
+                              "truncate text-sm font-bold leading-tight",
                               index === currentIndex ? "text-primary" : "text-foreground"
                             )}
                           >
                             {song.title}
                           </p>
-                          <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5 transition-colors">{song.artist}</p>
+                          <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5">{song.artist}</p>
                         </div>
                       </button>
-                      <span className="text-xs font-bold tabular-nums text-muted-foreground/60 mr-1 transition-colors">{formatTime(song.duration)}</span>
+                      <span className="text-xs font-bold tabular-nums text-muted-foreground/60 mr-1">{formatTime(song.duration)}</span>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => removeFromQueue(index)}
-                        className="h-10 w-10 rounded-full opacity-0 transition-all duration-300 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 active:scale-90"
+                        className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive focus:opacity-100 active:scale-90"
                       >
-                        <X className="h-4 w-4 transition-transform duration-500" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500 pb-32">
-                    <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6 transition-transform duration-500 hover:scale-110">
+                  <div className="flex flex-col items-center justify-center py-24 text-center h-full animate-in fade-in zoom-in-95 duration-500">
+                    <div className="h-20 w-20 rounded-[2rem] bg-muted/50 flex items-center justify-center mb-6">
                       <ListMusic className="h-10 w-10 text-muted-foreground/40" />
                     </div>
                     <p className="font-extrabold text-xl mb-2">Queue is empty</p>
@@ -1236,23 +1260,23 @@ export function AudioPlayer() {
               onClick={togglePlay}
               disabled={isLoading || !audioUrl}
               className={cn(
-                "h-14 w-14 flex-shrink-0 rounded-[1.5rem] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] active:scale-90",
+                "h-14 w-14 flex flex-shrink-0 items-center justify-center rounded-[1.5rem] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] active:scale-90",
                 isPlaying ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
               )}
             >
               {isLoading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
               ) : isPlaying ? (
-                <Pause className="h-6 w-6 fill-current transition-transform duration-500" />
+                <Pause className="h-6 w-6 fill-current" />
               ) : (
-                <Play className="h-6 w-6 fill-current pl-1 transition-transform duration-500" />
+                <Play className="h-6 w-6 fill-current translate-x-[2px]" />
               )}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Auth / Sign In Dialog */}
+      {/* Auth / Local Profile Dialog */}
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="rounded-[2rem] sm:max-w-md p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-300 ease-[cubic-bezier(0.2,0,0,1)]">
           <DialogHeader>
@@ -1261,9 +1285,9 @@ export function AudioPlayer() {
                 <UserCircle2 className="h-10 w-10 transition-transform duration-500" />
               </div>
             </div>
-            <DialogTitle className="text-2xl font-extrabold text-center tracking-tight">Welcome to Ganvo</DialogTitle>
+            <DialogTitle className="text-2xl font-extrabold text-center tracking-tight">Create Local Profile</DialogTitle>
             <DialogDescription className="font-medium text-center mt-2 leading-relaxed">
-              Sign in to save your liked songs and keep your library synced locally on this device.
+              Enter a username to save your liked songs and library locally on this device.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSignIn} className="space-y-6 mt-4">
@@ -1307,7 +1331,7 @@ export function AudioPlayer() {
               synchronized lyrics, and fluid animations.
             </p>
             <p className="transition-colors">
-              Built with Next.js App Router, Tailwind CSS, and shadcn/ui components.
+              Built with Next.js App Router, Tailwind CSS, Local Storage, and shadcn/ui.
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-4">
               <span className="text-xs font-bold uppercase tracking-wider text-foreground transition-colors">Powered by</span>
