@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import YTMusic from 'ytmusic-api'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const ytmusic = new YTMusic()
 let initialized = false
 
