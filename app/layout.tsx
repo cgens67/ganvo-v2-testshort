@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { Roboto } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 
 const roboto = Roboto({ 
   subsets: ["latin"],
-  weight:["300", "400", "500", "700", "900"],
+  weight: ["300", "400", "500", "700", "900"],
   variable: "--font-roboto"
 });
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: 'Search and play music with synced lyrics',
   generator: 'v0.app',
   icons: {
-    icon:[
+    icon: [
       {
         url: '/icon-light-32x32.png',
         media: '(prefers-color-scheme: light)',
@@ -41,7 +41,7 @@ export default function RootLayout({
     <html lang="en" className="bg-background">
       <body className={`${roboto.variable} font-sans antialiased`}>
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Analytics />
       </body>
     </html>
   )
