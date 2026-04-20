@@ -57,7 +57,7 @@ const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactN
       {title && Icon && <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><Icon className="h-6 w-6 text-primary"/> {title}</h3>}
       <div className="relative group">
         <Button variant="secondary" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-md" onClick={() => rowRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}><ChevronLeft className="h-5 w-5 text-foreground" /></Button>
-        <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)' }} className="w-full overflow-hidden -my-6 py-6">
+        <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }} className="w-full overflow-hidden -my-8 py-8">
           <div ref={rowRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x no-scrollbar px-6 scroll-smooth">
             {children}
           </div>
@@ -70,10 +70,10 @@ const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactN
 
 export function AudioPlayer() {
   const[isDark, setIsDark] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const[isFullscreen, setIsFullscreen] = useState(false)
   
   const [searchQuery, setSearchQuery] = useState("")
-  const[searchResults, setSearchResults] = useState<Song[]>([])
+  const [searchResults, setSearchResults] = useState<Song[]>([])
   const [searchSort, setSearchSort] = useState<'relevance' | 'az' | 'za'>('relevance')
   const[isSearching, setIsSearching] = useState(false)
   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
@@ -87,13 +87,13 @@ export function AudioPlayer() {
   const[duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(80)
   const[isMuted, setIsMuted] = useState(false)
-  const [shuffle, setShuffle] = useState(false)
+  const[shuffle, setShuffle] = useState(false)
   const [repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const [isLoading, setIsLoading] = useState(false)
   const[loadError, setLoadError] = useState<string | null>(null)
   
-  const[playbackRate, setPlaybackRate] = useState(1)
-  const [preservesPitch, setPreservesPitch] = useState(true)
+  const [playbackRate, setPlaybackRate] = useState(1)
+  const[preservesPitch, setPreservesPitch] = useState(true)
 
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
   const[currentLyricIndex, setCurrentLyricIndex] = useState(-1)
@@ -103,21 +103,19 @@ export function AudioPlayer() {
   const[isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
   const[mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
 
-  const[exploreData, setExploreData] = useState<{creatorsPicks: Song[], artists: any[], songs: Song[], albums: any[]}>({creatorsPicks: [], artists:[], songs:[], albums:[]})
-  const[isExploreLoading, setIsExploreLoading] = useState(true)
+  const [exploreData, setExploreData] = useState<{creatorsPicks: Song[], artists: any[], songs: Song[], albums: any[]}>({creatorsPicks: [], artists:[], songs: [], albums:[]})
+  const [isExploreLoading, setIsExploreLoading] = useState(true)
   const [exploreError, setExploreError] = useState(false)
   
   const[currentArtistData, setCurrentArtistData] = useState<any>(null)
   const[isArtistLoading, setIsArtistLoading] = useState(false)
   const [currentAlbumData, setCurrentAlbumData] = useState<any>(null)
-  const [isAlbumLoading, setIsAlbumLoading] = useState(false)
+  const[isAlbumLoading, setIsAlbumLoading] = useState(false)
   const[currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
 
   // Dialog States
   const[showAboutDialog, setShowAboutDialog] = useState(false)
   const [showCreditsDialog, setShowCreditsDialog] = useState(false)
-  const[showTosDialog, setShowTosDialog] = useState(false)
-  const [showCopyrightDialog, setShowCopyrightDialog] = useState(false)
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
   const [showEffectsDialog, setShowEffectsDialog] = useState(false)
@@ -126,7 +124,7 @@ export function AudioPlayer() {
   
   // Customization Settings
   const [dynamicTheme, setDynamicTheme] = useState(true)
-  const [playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
+  const[playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
   const [thumbnailRadius, setThumbnailRadius] = useState(32)
   const[dominantColor, setDominantColor] = useState<string | null>(null)
   const[lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
@@ -138,15 +136,15 @@ export function AudioPlayer() {
   // Auth States
   const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
-  const [email, setEmail] = useState("")
+  const[email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const[isSignUp, setIsSignUp] = useState(false)
   const[authError, setAuthError] = useState("")
-  const[displayNameInput, setDisplayNameInput] = useState("")
+  const [displayNameInput, setDisplayNameInput] = useState("")
   
   // Data States
   const[likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
-  const[savedSongs, setSavedSongs] = useState<Song[]>([])
+  const [savedSongs, setSavedSongs] = useState<Song[]>([])
   const [playlists, setPlaylists] = useState<Playlist[]>([])
 
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -553,7 +551,7 @@ export function AudioPlayer() {
     addToQueueAndPlay(song)
   }
 
-  // Load audio stream when song changes
+  // Load audio stream when song changes - highly reliable client-side fallback logic
   useEffect(() => {
     if (!currentSong) return
 
@@ -563,21 +561,68 @@ export function AudioPlayer() {
       setLoadError(null)
 
       try {
-        const response = await fetch(`/api/music/stream/${currentSong.videoId}?quality=${audioQuality}`)
-        const data = await response.json()
+        const vId = currentSong.videoId;
+        let finalUrl = null;
 
-        if (data.error) {
-          setLoadError(data.error)
-          return
+        // 1. Try Ryzen API (fast & reliable CORS)
+        try {
+          const ryzenRes = await fetch(`https://api.ryzendesu.vip/api/downloader/ytmp3?url=https://youtu.be/${vId}`);
+          if (ryzenRes.ok) {
+            const data = await ryzenRes.json();
+            if (data.url || data.download_url) finalUrl = data.url || data.download_url;
+          }
+        } catch(e){}
+
+        // 2. Try Cobalt API
+        if (!finalUrl) {
+          try {
+            const cobaltRes = await fetch('https://api.cobalt.tools', {
+              method: 'POST',
+              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${vId}`, downloadMode: 'audio' })
+            });
+            if (cobaltRes.ok) {
+              const data = await cobaltRes.json();
+              if (data.url) finalUrl = data.url;
+            }
+          } catch(e){}
         }
 
-        if (data.audioUrl) {
-          setAudioUrl(data.audioUrl)
+        // 3. Try Piped API directly
+        if (!finalUrl) {
+          const PIPED_INSTANCES =['https://pipedapi.kavin.rocks', 'https://api.piped.yt', 'https://pipedapi.adminforge.de'];
+          for (const instance of PIPED_INSTANCES) {
+            try {
+              const res = await fetch(`${instance}/streams/${vId}`);
+              if (res.ok) {
+                const data = await res.json();
+                const streams = (data.audioStreams ||[])
+                  .filter((s: any) => s.url && s.mimeType?.includes('audio'))
+                  .sort((a: any, b: any) => audioQuality === 'Low' ? (a.bitrate || 0) - (b.bitrate || 0) : (b.bitrate || 0) - (a.bitrate || 0));
+                if (streams.length > 0) {
+                  finalUrl = streams[0].url;
+                  break;
+                }
+              }
+            } catch(e){}
+          }
+        }
+
+        // 4. Fallback to API route
+        if (!finalUrl) {
+          const response = await fetch(`/api/music/stream/${vId}?quality=${audioQuality}`)
+          const data = await response.json()
+          if (data.audioUrl) finalUrl = data.audioUrl;
+          else if (data.error) throw new Error(data.error);
+        }
+
+        if (finalUrl) {
+          setAudioUrl(finalUrl)
         } else {
           setLoadError("No audio stream available")
         }
-      } catch (error) {
-        setLoadError("Network error. Please try again.")
+      } catch (error: any) {
+        setLoadError(error.message || "Network error. Please try again.")
       } finally {
         setIsLoading(false)
       }
@@ -614,7 +659,7 @@ export function AudioPlayer() {
     }
 
     loadLyrics()
-  },[currentSong?.videoId, lyricsProvider])
+  }, [currentSong?.videoId, lyricsProvider])
 
   // Auto-play when audio URL is ready
   useEffect(() => {
@@ -649,7 +694,7 @@ export function AudioPlayer() {
         }, 50)
       }
     }
-  },[currentTime, lyrics, currentLyricIndex])
+  }, [currentTime, lyrics, currentLyricIndex])
 
   const handleTimeUpdate = () => { if (audioRef.current) setCurrentTime(audioRef.current.currentTime) }
   const handleLoadedMetadata = () => { if (audioRef.current) setDuration(audioRef.current.duration) }
@@ -671,7 +716,7 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex(nextIndex)
-  }, [queue.length, currentIndex, shuffle, repeatMode])
+  },[queue.length, currentIndex, shuffle, repeatMode])
 
   const handleEnded = async () => {
     if (repeatMode === "one") {
@@ -718,7 +763,7 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex((currentIndex - 1 + queue.length) % queue.length)
-  }, [queue.length, currentIndex, currentTime])
+  },[queue.length, currentIndex, currentTime])
 
   const handleSeek = (value: number[]) => {
     if (audioRef.current) {
@@ -794,9 +839,9 @@ export function AudioPlayer() {
         </div>
       )}
 
-      {/* Notice no crossOrigin="anonymous" on audio ref! It's removed so CORS won't block pure streams */}
       <audio
         ref={audioRef}
+        crossOrigin="anonymous"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onLoadedData={handleLoadedData}
@@ -808,7 +853,7 @@ export function AudioPlayer() {
       {/* Header - Expressive M3 style */}
       <header className="elevation-1 z-40 flex h-16 flex-shrink-0 items-center justify-between px-3 md:px-6 transition-all duration-500 ease-out relative bg-background/90 backdrop-blur-xl border-b border-border/40 gap-2">
         <div className={cn(
-          "flex items-center shrink-0 transition-all duration-400 ease-out origin-left overflow-hidden", 
+          "flex items-center shrink-0 transition-all duration-500 ease-out origin-left overflow-hidden", 
           searchFocused ? "w-0 opacity-0 mr-0 md:w-[120px] md:opacity-100 md:mr-2" : "w-[40px] opacity-100 mr-1 md:w-[120px] md:mr-2 gap-3"
         )}>
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 shadow-md">
@@ -821,7 +866,7 @@ export function AudioPlayer() {
         </div>
 
         {/* Search bar */}
-        <div ref={searchContainerRef} className="relative flex-1 max-w-2xl mx-auto w-full transition-all duration-500 ease-out">
+        <div ref={searchContainerRef} className="relative flex-1 max-w-2xl mx-auto w-full transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)]">
           <div className="relative flex items-center">
             <Search className="absolute left-4 h-5 w-5 text-muted-foreground transition-colors" />
             <Input
@@ -873,7 +918,7 @@ export function AudioPlayer() {
                     </div>
                   ) : (
                     <div className="animate-in fade-in duration-500">
-                      <div className="flex items-center justify-between p-3 mb-2 border-b bg-muted/20 rounded-xl" onMouseDown={(e) => e.preventDefault()}>
+                      <div className="flex items-center justify-between p-3 mb-2 border-b bg-muted/20 rounded-xl">
                         <span className="text-xs font-bold text-muted-foreground ml-2">RESULTS</span>
                         <Select value={searchSort} onValueChange={(v: any) => setSearchSort(v)}>
                           <SelectTrigger className="h-7 text-xs w-[120px] rounded-full border-none bg-muted font-bold text-foreground outline-none focus:ring-0">
@@ -912,7 +957,7 @@ export function AudioPlayer() {
         </div>
 
         {/* Right side buttons */}
-        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+        <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
           <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="hidden sm:flex h-10 w-10 rounded-full text-foreground transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-muted hover:scale-110 active:scale-90 outline-none focus:outline-none focus-visible:outline-none">
             {isFullscreen ? <Minimize className="h-5 w-5 fill-current" /> : <Maximize className="h-5 w-5 fill-current" />}
           </Button>
@@ -1293,7 +1338,7 @@ export function AudioPlayer() {
                   )}
                 </div>
              </div>
-          ) : ['player', 'lyrics', 'queue', 'library'].includes(activeTab) ? (
+          ) :['player', 'lyrics', 'queue', 'library'].includes(activeTab) ? (
             <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 md:px-8 relative">
               {loadError && (
                 <div className="absolute top-4 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center mx-4">
@@ -1344,7 +1389,7 @@ export function AudioPlayer() {
                       max={duration || 100}
                       step={0.1}
                       onValueChange={handleSeek}
-                      className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2 [&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
+                      className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
                     />
                     <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70">
                       <span>{formatTime(currentTime)}</span>
@@ -1638,7 +1683,7 @@ export function AudioPlayer() {
               )}
               {/* Responsive Square Album Art */}
               <div 
-                className="w-[75vw] max-w-[280px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center"
+                className="w-full max-w-[360px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center"
                 style={{ borderRadius: `${thumbnailRadius}px` }}
               >
                  <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out absolute inset-0", isPlaying ? "scale-105" : "scale-100")} />
@@ -1660,7 +1705,7 @@ export function AudioPlayer() {
               </div>
 
               <div className="w-full mb-8">
-                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
+                <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-2" />
                 <div className="flex justify-between text-sm font-bold text-muted-foreground">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
