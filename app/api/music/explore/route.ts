@@ -33,35 +33,17 @@ export async function GET() {
       ytmusic.searchAlbums("Top Albums 2024")
     ])
     
-    // Fetch Creator's Picks with a safe fallback loop so they always appear
-    const picksIds =['M_DiTjNBiOY', 'nmbiBVPe5bY', 'p9OtySpRRL8', 'iHsObIWkM-s', '_2qJy5r-WAY', 'M2dgm4xK3IY', 'DntZ3-yCaFs', '-KrC-gqKTMg']
-    const creatorsPicks =[];
-    
-    for (const id of picksIds) {
-      try {
-        const song = await ytmusic.getSong(id);
-        if (song) {
-          creatorsPicks.push({
-            videoId: song.videoId || id,
-            title: song.name || 'Unknown Track',
-            artist: song.artist?.name || 'Unknown Artist',
-            album: song.album?.name || '',
-            duration: song.duration || 0,
-            thumbnail: formatThumb(song.thumbnails) || `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
-          });
-        }
-      } catch (e) {
-        // Fallback if ytmusic-api fails for a specific region-restricted ID
-        creatorsPicks.push({
-          videoId: id,
-          title: 'YouTube Track',
-          artist: 'Unknown Artist',
-          album: '',
-          duration: 0,
-          thumbnail: `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
-        });
-      }
-    }
+    // Hardcoded Creator's Picks for maximum speed, correct metadata, and reliability
+    const creatorsPicks =[
+      { videoId: 'M_DiTjNBiOY', title: 'XO Tour Llif3', artist: 'Lil Uzi Vert', album: 'Luv Is Rage 2', duration: 182, thumbnail: 'https://i.ytimg.com/vi/M_DiTjNBiOY/maxresdefault.jpg' },
+      { videoId: 'nmbiBVPe5bY', title: 'APT.', artist: 'ROSÉ & Bruno Mars', album: 'rosie', duration: 170, thumbnail: 'https://i.ytimg.com/vi/nmbiBVPe5bY/maxresdefault.jpg' },
+      { videoId: 'p9OtySpRRL8', title: 'Die With A Smile', artist: 'Lady Gaga, Bruno Mars', album: 'Die With A Smile', duration: 251, thumbnail: 'https://i.ytimg.com/vi/p9OtySpRRL8/maxresdefault.jpg' },
+      { videoId: 'iHsObIWkM-s', title: 'Heartless', artist: 'The Weeknd', album: 'After Hours', duration: 201, thumbnail: 'https://i.ytimg.com/vi/iHsObIWkM-s/maxresdefault.jpg' },
+      { videoId: '_2qJy5r-WAY', title: 'Starboy', artist: 'The Weeknd', album: 'Starboy', duration: 230, thumbnail: 'https://i.ytimg.com/vi/_2qJy5r-WAY/maxresdefault.jpg' },
+      { videoId: 'M2dgm4xK3IY', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: 200, thumbnail: 'https://i.ytimg.com/vi/M2dgm4xK3IY/maxresdefault.jpg' },
+      { videoId: 'DntZ3-yCaFs', title: 'Save Your Tears', artist: 'The Weeknd', album: 'After Hours', duration: 215, thumbnail: 'https://i.ytimg.com/vi/DntZ3-yCaFs/maxresdefault.jpg' },
+      { videoId: '-KrC-gqKTMg', title: 'Die For You', artist: 'The Weeknd', album: 'Starboy', duration: 200, thumbnail: 'https://i.ytimg.com/vi/-KrC-gqKTMg/maxresdefault.jpg' }
+    ];
     
     const artists = artistsRes.slice(0, 15).map(a => ({
       artistId: a.artistId,
