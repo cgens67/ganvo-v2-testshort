@@ -21,7 +21,7 @@ const PIPED_INSTANCES =[
 async function tryCobalt(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
     const res = await fetch('https://api.cobalt.tools', {
       method: 'POST',
       headers: {
@@ -45,7 +45,7 @@ async function tryCobalt(videoId: string) {
 async function tryRyzen(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
     const res = await fetch(`https://api.ryzendesu.vip/api/downloader/ytmp3?url=https://youtu.be/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (res.ok) {
