@@ -21,7 +21,7 @@ const PIPED_INSTANCES =[
 async function tryCobalt(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     const res = await fetch('https://api.cobalt.tools', {
       method: 'POST',
       headers: {
@@ -45,7 +45,7 @@ async function tryCobalt(videoId: string) {
 async function tryRyzen(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     const res = await fetch(`https://api.ryzendesu.vip/api/downloader/ytmp3?url=https://youtu.be/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (res.ok) {
@@ -58,14 +58,17 @@ async function tryRyzen(videoId: string) {
 async function tryInvidious(videoId: string, instance: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4500)
+    const timeoutId = setTimeout(() => controller.abort(), 4000)
     const res = await fetch(`${instance}/api/v1/videos/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (!res.ok) return null
     const data = await res.json()
     if (data.lengthSeconds) {
-      // local=true securely proxies the audio stream through the Invidious instance! Bypasses all IP blocks.
-      return { audioUrl: `${instance}/latest_version?id=${videoId}&itag=140&local=true`, duration: data.lengthSeconds, source: 'invidious' }
+      const audio = data.formatStreams?.find((s: any) => s.type.includes('audio/mp4') || s.type.includes('audio/webm'))
+      if (audio && audio.url) return { audioUrl: audio.url, duration: data.lengthSeconds || 0, source: 'invidious-direct' }
+      
+      // Fallback securely proxies the audio stream through the Invidious instance! Bypasses all IP blocks.
+      return { audioUrl: `${instance}/latest_version?id=${videoId}&itag=140&local=true`, duration: data.lengthSeconds, source: 'invidious-proxy' }
     }
   } catch { return null }
 }
@@ -73,7 +76,7 @@ async function tryInvidious(videoId: string, instance: string) {
 async function tryPiped(videoId: string, instance: string, quality: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4500)
+    const timeoutId = setTimeout(() => controller.abort(), 4000)
     const res = await fetch(`${instance}/streams/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (!res.ok) return null
