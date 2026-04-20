@@ -41,14 +41,14 @@ export async function GET(
     }))
 
     const albums = (artistData.albums ||[]).map((album) => ({
-      browseId: album.browseId,
+      albumId: album.browseId || album.albumId, // Fixed mapping
       title: album.title,
       year: album.year,
       thumbnail: formatThumbnail(album.thumbnails)
     }))
 
     const singles = (artistData.singles ||[]).map((single) => ({
-      browseId: single.browseId,
+      albumId: single.browseId || single.albumId, // Fixed mapping
       title: single.title,
       year: single.year,
       thumbnail: formatThumbnail(single.thumbnails)
