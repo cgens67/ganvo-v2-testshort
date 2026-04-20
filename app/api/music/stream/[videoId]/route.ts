@@ -5,31 +5,16 @@ export const revalidate = 0
 
 const PIPED_INSTANCES =[
   'https://pipedapi.kavin.rocks',
-  'https://pipedapi.smnz.de',
   'https://api.piped.yt',
   'https://pipedapi.tokhmi.xyz',
-  'https://pipedapi.adminforge.de',
-  'https://piped-api.garudalinux.org'
+  'https://pipedapi.adminforge.de'
 ]
 
-const INVIDIOUS_INSTANCES =[
-  'https://inv.tux.pizza',
-  'https://invidious.asir.dev',
-  'https://invidious.protokolla.fi',
-  'https://vid.puffyan.us'
-]
-
-const COBALT_INSTANCES =[
-  'https://api.cobalt.tools',
-  'https://cobalt.q0.o0o.ooo',
-  'https://co.wuk.sh'
-]
-
-async function tryCobalt(videoId: string, instance: string) {
+async function tryCobalt(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4000)
-    const res = await fetch(instance, {
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    const res = await fetch('https://api.cobalt.tools/', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -52,7 +37,7 @@ async function tryCobalt(videoId: string, instance: string) {
 async function tryRyzen(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4000)
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
     const res = await fetch(`https://api.ryzendesu.vip/api/downloader/ytmp3?url=https://youtu.be/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (res.ok) {
@@ -62,48 +47,51 @@ async function tryRyzen(videoId: string) {
   } catch { return null }
 }
 
-async function tryPiped(videoId: string, instance: string) {
+async function tryVreden(videoId: string) {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4000)
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    const res = await fetch(`https://api.vreden.web.id/api/ytmp3?url=https://youtu.be/${videoId}`, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.result?.download?.url) return { audioUrl: data.result.download.url, duration: 0, source: 'vreden' }
+    }
+  } catch { return null }
+}
+
+async function tryPiped(videoId: string, instance: string, quality: string) {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 6000)
     const res = await fetch(`${instance}/streams/${videoId}`, { signal: controller.signal })
     clearTimeout(timeoutId)
     if (!res.ok) return null
     const data = await res.json()
     const audioStreams = (data.audioStreams ||[])
       .filter((s: any) => s.url && s.mimeType?.includes('audio'))
-      .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))
+      .sort((a: any, b: any) => {
+        if (quality === 'Low') return (a.bitrate || 0) - (b.bitrate || 0); // Ascending
+        return (b.bitrate || 0) - (a.bitrate || 0); // Descending (High/Standard)
+      })
     if (audioStreams.length > 0) {
       return { audioUrl: audioStreams[0].url, duration: data.duration || 0, source: 'piped' }
     }
   } catch { return null }
 }
 
-async function tryInvidious(videoId: string, instance: string) {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 4000)
-    const res = await fetch(`${instance}/api/v1/videos/${videoId}`, { signal: controller.signal })
-    clearTimeout(timeoutId)
-    if (!res.ok) return null
-    const data = await res.json()
-    if (data.formatStreams) {
-      const audio = data.formatStreams.find((s: any) => s.type.includes('audio/mp4') || s.type.includes('audio/webm'))
-      if (audio && audio.url) return { audioUrl: audio.url, duration: data.lengthSeconds || 0, source: 'invidious' }
-    }
-  } catch { return null }
-}
-
 export async function GET(request: NextRequest, { params }: { params: Promise<{ videoId: string }> }) {
   const { videoId } = await params
+  const quality = request.nextUrl.searchParams.get('quality') || 'High'
+
   if (!videoId) return NextResponse.json({ error: 'Video ID required' }, { status: 400 })
 
   // Launch all requests concurrently to get the fastest available source
   const promises =[
-    ...COBALT_INSTANCES.map(i => tryCobalt(videoId, i)),
+    tryCobalt(videoId),
     tryRyzen(videoId),
-    ...PIPED_INSTANCES.map(i => tryPiped(videoId, i)),
-    ...INVIDIOUS_INSTANCES.map(i => tryInvidious(videoId, i))
+    tryVreden(videoId),
+    ...PIPED_INSTANCES.map(i => tryPiped(videoId, i, quality))
   ]
 
   try {
