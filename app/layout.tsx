@@ -5,16 +5,15 @@ import './globals.css'
 
 const roboto = Roboto({ 
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700", "900"],
+  weight:["300", "400", "500", "700", "900"],
   variable: "--font-roboto"
 });
 
 export const metadata: Metadata = {
   title: 'Ganvo Music',
   description: 'Search and play music with synced lyrics',
-  generator: 'v0.app',
   icons: {
-    icon: [
+    icon:[
       {
         url: '/icon-light-32x32.png',
         media: '(prefers-color-scheme: light)',
