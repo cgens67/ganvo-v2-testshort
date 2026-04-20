@@ -59,20 +59,20 @@ export function AudioPlayer() {
   const [searchSort, setSearchSort] = useState<'relevance' | 'az' | 'za'>('relevance')
   const [isSearching, setIsSearching] = useState(false)
   const[isSearchExpanded, setIsSearchExpanded] = useState(false)
-  const [searchHistory, setSearchHistory] = useState<string[]>([])
+  const[searchHistory, setSearchHistory] = useState<string[]>([])
   const [searchFocused, setSearchFocused] = useState(false)
   
   const [queue, setQueue] = useState<Song[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const[isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
+  const[currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(80)
-  const [isMuted, setIsMuted] = useState(false)
+  const[isMuted, setIsMuted] = useState(false)
   const [shuffle, setShuffle] = useState(false)
   const [repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const [isLoading, setIsLoading] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const[loadError, setLoadError] = useState<string | null>(null)
   
   const[playbackRate, setPlaybackRate] = useState(1)
   const [preservesPitch, setPreservesPitch] = useState(true)
@@ -81,33 +81,33 @@ export function AudioPlayer() {
   const[currentLyricIndex, setCurrentLyricIndex] = useState(-1)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'explore' | 'queue' | 'lyrics' | 'library' | 'artist' | 'album' | 'playlistView'>('explore')
+  const[activeTab, setActiveTab] = useState<'player' | 'explore' | 'queue' | 'lyrics' | 'library' | 'artist' | 'album' | 'playlistView'>('explore')
   const [isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
   const[mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
 
   const[exploreData, setExploreData] = useState<{artists: any[], songs: Song[], albums: any[]}>({artists: [], songs: [], albums:[]})
-  const [isExploreLoading, setIsExploreLoading] = useState(true)
+  const[isExploreLoading, setIsExploreLoading] = useState(true)
   const [exploreError, setExploreError] = useState(false)
   
   const[currentArtistData, setCurrentArtistData] = useState<any>(null)
   const [isArtistLoading, setIsArtistLoading] = useState(false)
-  const [currentAlbumData, setCurrentAlbumData] = useState<any>(null)
+  const[currentAlbumData, setCurrentAlbumData] = useState<any>(null)
   const[isAlbumLoading, setIsAlbumLoading] = useState(false)
   const [currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
 
   // Dialog States
   const [showAboutDialog, setShowAboutDialog] = useState(false)
-  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const [showPlayerSettings, setShowPlayerSettings] = useState(false) 
-  const [showEffectsDialog, setShowEffectsDialog] = useState(false)
+  const[showEffectsDialog, setShowEffectsDialog] = useState(false)
   const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState("")
   
   // Customization Settings
   const [dynamicTheme, setDynamicTheme] = useState(true)
-  const [playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
-  const [thumbnailRadius, setThumbnailRadius] = useState(32)
+  const[playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
+  const[thumbnailRadius, setThumbnailRadius] = useState(32)
   const[dominantColor, setDominantColor] = useState<string | null>(null)
   const [lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
   const [lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
@@ -115,11 +115,11 @@ export function AudioPlayer() {
   // Auth States
   const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
-  const [email, setEmail] = useState("")
+  const[email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
   const[authError, setAuthError] = useState("")
-  const [displayNameInput, setDisplayNameInput] = useState("")
+  const[displayNameInput, setDisplayNameInput] = useState("")
   
   // Data States
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
@@ -341,7 +341,7 @@ export function AudioPlayer() {
     e.preventDefault()
     if (!newPlaylistName.trim()) return
     const newPlaylist: Playlist = { id: Date.now().toString(), name: newPlaylistName.trim(), songs: [] }
-    const updatedPlaylists = [...playlists, newPlaylist]
+    const updatedPlaylists =[...playlists, newPlaylist]
     setPlaylists(updatedPlaylists)
     syncToCloud(savedSongs, updatedPlaylists)
     setNewPlaylistName("")
@@ -451,7 +451,7 @@ export function AudioPlayer() {
   const addToQueueAndPlay = async (song: Song) => {
     const saveSearchStr = searchQuery || song.title
     if (saveSearchStr.trim()) {
-      const newHistory =[saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
+      const newHistory = [saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
       setSearchHistory(newHistory)
       localStorage.setItem('ganvo_search_history', JSON.stringify(newHistory))
     }
@@ -504,7 +504,7 @@ export function AudioPlayer() {
     }
 
     loadStream()
-  }, [currentSong?.videoId])
+  },[currentSong?.videoId])
 
   // Load lyrics
   useEffect(() => {
@@ -609,7 +609,7 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex(nextIndex)
-  }, [queue.length, currentIndex, shuffle, repeatMode])
+  },[queue.length, currentIndex, shuffle, repeatMode])
 
   const playPrevious = useCallback(() => {
     if (queue.length === 0) return
@@ -648,7 +648,7 @@ export function AudioPlayer() {
   const toggleLike = async (song: Song) => {
     setLikedSongs((prev) => {
       const next = new Set(prev)
-      let newSaved = [...savedSongs]
+      let newSaved =[...savedSongs]
       if (next.has(song.videoId)) {
         next.delete(song.videoId)
         newSaved = newSaved.filter(s => s.videoId !== song.videoId)
@@ -726,7 +726,7 @@ export function AudioPlayer() {
       {/* Header - Expressive M3 style */}
       <header className="elevation-1 z-40 flex h-16 flex-shrink-0 items-center justify-between px-3 md:px-6 transition-all duration-500 ease-out relative bg-background/90 backdrop-blur-xl border-b border-border/40 gap-2">
         <div className={cn(
-          "flex items-center shrink-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-left overflow-hidden min-w-fit", 
+          "flex items-center shrink-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-left overflow-hidden", 
           searchFocused ? "max-w-0 opacity-0 gap-0 mr-0" : "max-w-[200px] opacity-100 gap-3 mr-2"
         )}>
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 shadow-md">
@@ -917,19 +917,21 @@ export function AudioPlayer() {
                    {exploreData?.artists?.length > 0 && (
                      <div>
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><UserCircle2 className="h-6 w-6 text-primary"/> Top Artists</h3>
-                       <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar px-1 py-4 -my-4 -mx-4 px-4">
-                          {exploreData.artists.map((artist, idx) => (
-                            <div key={artist.artistId || idx} onClick={() => loadArtistView(artist.artistId)} className="group flex flex-col items-center gap-4 cursor-pointer snap-start w-32 sm:w-40 shrink-0">
-                              <div className="relative w-full aspect-square rounded-full overflow-hidden shadow-lg transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95">
-                                <img src={artist.thumbnail || "/placeholder.svg"} alt={artist.name} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                       <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }} className="w-full overflow-hidden">
+                         <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar py-4 px-4 -my-4">
+                            {exploreData.artists.map((artist, idx) => (
+                              <div key={artist.artistId || idx} onClick={() => loadArtistView(artist.artistId)} className="group flex flex-col items-center gap-4 cursor-pointer snap-start w-32 sm:w-40 shrink-0">
+                                <div className="relative w-full aspect-square rounded-full overflow-hidden shadow-lg transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95">
+                                  <img src={artist.thumbnail || "/placeholder.svg"} alt={artist.name} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </div>
+                                <div className="text-center w-full px-2">
+                                  <p className="font-bold text-sm truncate transition-colors group-hover:text-primary text-foreground">{artist.name}</p>
+                                  <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">{artist.subscribers}</p>
+                                </div>
                               </div>
-                              <div className="text-center w-full px-2">
-                                <p className="font-bold text-sm truncate transition-colors group-hover:text-primary text-foreground">{artist.name}</p>
-                                <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">{artist.subscribers}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                         </div>
                        </div>
                      </div>
                    )}
@@ -971,18 +973,20 @@ export function AudioPlayer() {
                    {exploreData?.albums?.length > 0 && (
                      <div>
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><Disc3 className="h-6 w-6 text-primary"/> Top Albums</h3>
-                       <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar px-1 py-4 -my-4 -mx-4 px-4">
-                          {exploreData.albums.map((album, idx) => (
-                            <div key={idx} onClick={() => loadAlbumView(album.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
-                              <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
-                                <img src={album.thumbnail} className="w-full h-full object-cover" />
+                       <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }} className="w-full overflow-hidden">
+                         <div className="flex overflow-x-auto pb-4 gap-6 snap-x no-scrollbar py-4 px-4 -my-4">
+                            {exploreData.albums.map((album, idx) => (
+                              <div key={idx} onClick={() => loadAlbumView(album.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
+                                <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
+                                  <img src={album.thumbnail} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
+                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{album.artist} • {album.year}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
-                                <p className="text-xs font-medium text-muted-foreground mt-0.5">{album.artist} • {album.year}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                         </div>
                        </div>
                      </div>
                    )}
@@ -1049,18 +1053,20 @@ export function AudioPlayer() {
                     {currentArtistData.albums?.length > 0 && (
                       <div className="mb-12">
                         <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><Disc3 className="h-6 w-6 text-primary"/> Albums</h3>
-                        <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar py-4 -my-4 -mx-4 px-4">
-                          {currentArtistData.albums.map((album: any, idx: number) => (
-                            <div key={idx} onClick={() => loadAlbumView(album.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
-                              <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
-                                <img src={album.thumbnail} className="w-full h-full object-cover" />
+                        <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }} className="w-full overflow-hidden">
+                          <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar py-4 px-4 -my-4">
+                            {currentArtistData.albums.map((album: any, idx: number) => (
+                              <div key={idx} onClick={() => loadAlbumView(album.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
+                                <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
+                                  <img src={album.thumbnail} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
+                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{album.year}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
-                                <p className="text-xs font-medium text-muted-foreground mt-0.5">{album.year}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1068,18 +1074,20 @@ export function AudioPlayer() {
                     {currentArtistData.singles?.length > 0 && (
                       <div className="mb-8">
                         <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><Music2 className="h-6 w-6 text-primary"/> Singles & EPs</h3>
-                        <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar py-4 -my-4 -mx-4 px-4">
-                          {currentArtistData.singles.map((single: any, idx: number) => (
-                            <div key={idx} onClick={() => loadAlbumView(single.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
-                              <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
-                                <img src={single.thumbnail} className="w-full h-full object-cover" />
+                        <div style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }} className="w-full overflow-hidden">
+                          <div className="flex overflow-x-auto pb-4 gap-4 snap-x no-scrollbar py-4 px-4 -my-4">
+                            {currentArtistData.singles.map((single: any, idx: number) => (
+                              <div key={idx} onClick={() => loadAlbumView(single.albumId)} className="flex flex-col gap-3 w-40 sm:w-48 shrink-0 group cursor-pointer snap-start">
+                                <div className="overflow-hidden rounded-2xl shadow-md transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 aspect-square relative">
+                                  <img src={single.thumbnail} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{single.title}</p>
+                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{single.year}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-bold text-sm truncate text-foreground group-hover:text-primary transition-colors">{single.title}</p>
-                                <p className="text-xs font-medium text-muted-foreground mt-0.5">{single.year}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1205,7 +1213,12 @@ export function AudioPlayer() {
                 </div>
              </div>
           ) : activeTab === 'player' ? (
-            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 md:px-8">
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 md:px-8 relative">
+              {loadError && (
+                <div className="absolute top-4 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center mx-4">
+                  {loadError}
+                </div>
+              )}
               {currentSong ? (
                 <div className="flex w-full max-w-[480px] flex-col items-center animate-in fade-in zoom-in-95 duration-700 ease-out">
                   
@@ -1529,7 +1542,12 @@ export function AudioPlayer() {
 
         <div className="flex-1 overflow-y-auto min-h-0 relative px-6 pb-6 pt-4 flex flex-col">
           {mobilePlayerTab === 'player' && currentSong && (
-            <div className="flex flex-col items-center h-full animate-in fade-in zoom-in-95 duration-500 flex-1 justify-center">
+            <div className="flex flex-col items-center h-full animate-in fade-in zoom-in-95 duration-500 flex-1 justify-center relative">
+              {loadError && (
+                <div className="absolute top-0 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center">
+                  {loadError}
+                </div>
+              )}
               {/* Responsive Square Album Art */}
               <div 
                 className="aspect-square w-[85vw] max-w-[320px] mx-auto overflow-hidden shadow-2xl relative mb-8"
@@ -1671,7 +1689,7 @@ export function AudioPlayer() {
                  <span className="font-bold text-foreground">Preserve Pitch</span>
                  <span className="text-xs font-medium text-muted-foreground">Turn off for Nightcore effect</span>
                </div>
-               <Switch checked={preservesPitch} onCheckedChange={setPreservesPitch} className="data-[state=checked]:bg-[var(--google-blue)]" />
+               <Switch checked={preservesPitch} onCheckedChange={setPreservesPitch} />
             </div>
 
             <Button onClick={() => {setPlaybackRate(1); setPreservesPitch(true)}} variant="secondary" className="w-full h-12 rounded-xl font-bold text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none">Reset to Default</Button>
@@ -1687,7 +1705,7 @@ export function AudioPlayer() {
           </div>
           <div className="p-2 overflow-y-auto max-h-[70vh] no-scrollbar pb-10">
              <div className="px-4 py-2 space-y-1">
-               <h3 className="text-[13px] font-bold text-[var(--google-blue)] mb-4 ml-2">Theme</h3>
+               <h3 className="text-[13px] font-bold text-primary mb-4 ml-2">Theme</h3>
                
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
                  <div className="flex items-center gap-4">
@@ -1697,7 +1715,7 @@ export function AudioPlayer() {
                      <span className="text-xs font-normal text-muted-foreground">Extracts colors from the active album cover.</span>
                    </div>
                  </div>
-                 <Switch checked={dynamicTheme} onCheckedChange={setDynamicTheme} className="data-[state=checked]:bg-[var(--google-blue)] shrink-0" />
+                 <Switch checked={dynamicTheme} onCheckedChange={setDynamicTheme} className="shrink-0" />
                </div>
                
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setIsDark(!isDark)}>
@@ -1708,12 +1726,12 @@ export function AudioPlayer() {
                      <span className="text-sm font-normal text-muted-foreground">{isDark ? 'On' : 'Off'}</span>
                    </div>
                  </div>
-                 <Switch checked={isDark} onCheckedChange={setIsDark} className="data-[state=checked]:bg-[var(--google-blue)] shrink-0 pointer-events-none" />
+                 <Switch checked={isDark} onCheckedChange={setIsDark} className="shrink-0 pointer-events-none" />
                </div>
              </div>
              
              <div className="px-4 py-4 space-y-1">
-               <h3 className="text-[13px] font-bold text-[var(--google-blue)] mb-4 ml-2">Player</h3>
+               <h3 className="text-[13px] font-bold text-primary mb-4 ml-2">Player</h3>
                
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
                  <div className="flex items-center gap-4">
@@ -1767,7 +1785,7 @@ export function AudioPlayer() {
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-[var(--google-blue)] [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
+                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
                   />
                </div>
              </div>
