@@ -26,7 +26,7 @@ import {
   ChevronUp, ExternalLink, History, Library, UserCircle2, LogOut,
   Maximize, Minimize, Settings, TrendingUp, ListPlus, Disc3, MicVocal,
   ArrowLeft, Palette, LayoutTemplate, CornerUpRight, Type, Star, 
-  ChevronLeft, ChevronRight, ListFilter, AlignLeft, ArrowDownUp, EyeOff, Trash2
+  ChevronLeft, ChevronRight, ListFilter, AlignLeft, ArrowDownUp, EyeOff, Trash2, Rows3, Maximize2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -57,7 +57,7 @@ const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactN
       <div className="relative group/scroll">
         <Button variant="secondary" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden md:flex opacity-0 group-hover/scroll:opacity-100 transition-opacity rounded-full shadow-md" onClick={() => rowRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}><ChevronLeft className="h-5 w-5 text-foreground" /></Button>
         <div className="w-full relative transform-gpu" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }}>
-          <div ref={rowRef} className="flex overflow-x-auto overscroll-contain gap-4 md:gap-6 snap-x no-scrollbar px-6 pt-4 pb-8 scroll-smooth items-center">
+          <div ref={rowRef} className="flex overflow-x-auto md:overflow-x-hidden overscroll-contain gap-4 md:gap-6 snap-x no-scrollbar px-6 pt-4 pb-8 scroll-smooth items-center">
             {children}
           </div>
         </div>
@@ -86,11 +86,14 @@ export function AudioPlayer() {
   const[duration, setDuration] = useState(0)
   const[volume, setVolume] = useState(80)
   const[isMuted, setIsMuted] = useState(false)
-  const [shuffle, setShuffle] = useState(false)
+  const[shuffle, setShuffle] = useState(false)
   const[repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const[isLoading, setIsLoading] = useState(false)
   const[loadError, setLoadError] = useState<string | null>(null)
   
+  const[playbackRate, setPlaybackRate] = useState(1)
+  const[preservesPitch, setPreservesPitch] = useState(false)
+
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
   const[currentLyricIndex, setCurrentLyricIndex] = useState(-1)
 
@@ -109,9 +112,10 @@ export function AudioPlayer() {
   const[currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
 
   const[showAboutDialog, setShowAboutDialog] = useState(false)
-  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
+  const[showEffectsDialog, setShowEffectsDialog] = useState(false)
   const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const[newPlaylistName, setNewPlaylistName] = useState("")
   
@@ -121,23 +125,28 @@ export function AudioPlayer() {
   const[dominantColor, setDominantColor] = useState<string | null>(null)
   const[lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
   const[lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
+  const[audioQuality, setAudioQuality] = useState<'High' | 'Standard' | 'Low'>('High')
   const[autoPlaySimilar, setAutoPlaySimilar] = useState(false)
+  const[audioUrl, setAudioUrl] = useState<string | null>(null)
   
   // New Expanded Settings State
   const[autoScrollLyrics, setAutoScrollLyrics] = useState(true)
   const[lyricsAlignment, setLyricsAlignment] = useState<'Left' | 'Center' | 'Right'>('Center')
   const[lyricsGlass, setLyricsGlass] = useState(false)
   const[hideCreatorsPicks, setHideCreatorsPicks] = useState(false)
+  const[compactQueue, setCompactQueue] = useState(false)
+  const[autoSwitchToPlayer, setAutoSwitchToPlayer] = useState(true)
+  const[saveSearchHistory, setSaveSearchHistory] = useState(true)
   
   const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
-  const [email, setEmail] = useState("")
+  const[email, setEmail] = useState("")
   const[password, setPassword] = useState("")
-  const [isSignUp, setIsSignUp] = useState(false)
-  const[authError, setAuthError] = useState("")
+  const[isSignUp, setIsSignUp] = useState(false)
+  const [authError, setAuthError] = useState("")
   const[displayNameInput, setDisplayNameInput] = useState("")
   
-  const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
+  const[likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
   const[savedSongs, setSavedSongs] = useState<Song[]>([])
   const[playlists, setPlaylists] = useState<Playlist[]>([])
 
@@ -212,6 +221,16 @@ export function AudioPlayer() {
     }
   },[currentSong?.thumbnail, playerBgStyle])
 
+  const applyAudioEffects = useCallback(() => {
+    if (ytPlayerRef.current?.setPlaybackRate) {
+      try { ytPlayerRef.current.setPlaybackRate(playbackRate) } catch(e){}
+    }
+  },[playbackRate])
+
+  useEffect(() => {
+    applyAudioEffects()
+  },[playbackRate, applyAudioEffects])
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(err => console.error(err))
@@ -242,6 +261,12 @@ export function AudioPlayer() {
       if (savedGlass !== null) setLyricsGlass(savedGlass === 'true')
       const savedHidePicks = localStorage.getItem('ganvo_hide_picks')
       if (savedHidePicks !== null) setHideCreatorsPicks(savedHidePicks === 'true')
+      const savedCompactQueue = localStorage.getItem('ganvo_compact_queue')
+      if (savedCompactQueue !== null) setCompactQueue(savedCompactQueue === 'true')
+      const savedAutoSwitch = localStorage.getItem('ganvo_auto_switch_player')
+      if (savedAutoSwitch !== null) setAutoSwitchToPlayer(savedAutoSwitch === 'true')
+      const savedHistoryEnabled = localStorage.getItem('ganvo_save_history')
+      if (savedHistoryEnabled !== null) setSaveSearchHistory(savedHistoryEnabled === 'true')
     } catch (e) {}
 
     setIsExploreLoading(true)
@@ -448,13 +473,13 @@ export function AudioPlayer() {
 
   const addToQueueAndPlay = async (song: Song) => {
     const saveSearchStr = searchQuery || song.title
-    if (saveSearchStr.trim()) {
+    if (saveSearchStr.trim() && saveSearchHistory) {
       const newHistory =[saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
       setSearchHistory(newHistory)
       localStorage.setItem('ganvo_search_history', JSON.stringify(newHistory))
     }
     
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+    if (autoSwitchToPlayer && typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setActiveTab('player');
     }
     
@@ -1323,7 +1348,7 @@ export function AudioPlayer() {
                   <div className="flex w-full items-center justify-between gap-3 px-2">
                     <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
                       <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground outline-none focus:outline-none"><VolumeIcon className="h-5 w-5 text-current" /></Button>
-                      <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10" />
+                      <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing[&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4[&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5[&_[data-slot=track]]:bg-foreground/10" />
                       <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
                     </div>
                   </div>
@@ -1382,7 +1407,7 @@ export function AudioPlayer() {
                   {lyrics?.syncedLyrics ? (
                     <div className={cn("flex flex-col gap-5 py-10 mt-4", getLyricAlignWrapperClass(), lyricsGlass && "bg-black/10 dark:bg-black/40 backdrop-blur-xl rounded-3xl mx-4 my-4 p-6 shadow-xl border border-white/5")}>
                       {lyrics.syncedLyrics.map((line, index) => (
-                        <p key={index} onClick={() => { if (ytPlayerRef.current) ytPlayerRef.current.seekTo(line.time, true) }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-2xl px-4 py-3 font-bold leading-relaxed max-w-full", getLyricTextClass(), getLyricOriginClass(), index === currentLyricIndex ? "lyric-active-line scale-[1.05] bg-primary/10 text-primary shadow-sm" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95")}>
+                        <p key={index} onClick={() => { if (ytPlayerRef.current) ytPlayerRef.current.seekTo(line.time, true) }} className={cn("lyric-line transition-all duration-500 ease-out cursor-pointer rounded-2xl px-4 py-3 font-bold leading-relaxed text-center max-w-full", getLyricTextClass(), getLyricOriginClass(), index === currentLyricIndex ? "lyric-active-line scale-[1.05] bg-primary/10 text-primary shadow-sm" : index < currentLyricIndex ? "text-muted-foreground/30 scale-95" : "text-muted-foreground/70 hover:bg-muted hover:text-foreground scale-95")}>
                           {line.text}
                         </p>
                       ))}
@@ -1432,10 +1457,10 @@ export function AudioPlayer() {
                         {savedSongs.map((song, index) => (
                           <div key={`lib-${song.videoId}-${index}`} className="group flex items-center gap-3 rounded-2xl p-2 transition-all duration-300 hover:bg-muted">
                             <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-3 text-left outline-none">
-                              <img src={song.thumbnail} className="aspect-square w-12 rounded-xl object-cover shadow-sm transition-transform duration-500 group-hover:scale-105" />
+                              <img src={song.thumbnail} className={cn("aspect-square rounded-xl object-cover shadow-sm transition-transform duration-500 group-hover:scale-105", compactQueue ? "h-10 w-10" : "h-12 w-12")} />
                               <div className="flex-1 overflow-hidden">
-                                <p className="truncate text-sm font-bold leading-tight text-foreground transition-colors">{song.title}</p>
-                                <p className="truncate text-xs font-medium text-muted-foreground mt-0.5 transition-colors">{song.artist}</p>
+                                <p className={cn("truncate font-bold leading-tight text-foreground transition-colors", compactQueue ? "text-xs" : "text-sm")}>{song.title}</p>
+                                <p className={cn("truncate font-medium text-muted-foreground transition-colors", compactQueue ? "text-[10px] mt-0" : "text-xs mt-0.5")}>{song.artist}</p>
                               </div>
                             </button>
                             {/* Playlist Add Button Dropdown */}
@@ -1469,12 +1494,12 @@ export function AudioPlayer() {
                 <div className="h-full w-full p-3 space-y-2 pb-32 animate-in slide-in-from-bottom-8 duration-700 ease-out overflow-y-auto overscroll-contain no-scrollbar">
                   {queue.length > 0 ? (
                   queue.map((song, index) => (
-                    <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-3 rounded-2xl p-2 transition-all duration-300 hover:bg-muted/80", index === currentIndex ? "bg-primary/5 shadow-sm border border-primary/10 scale-[1.02]" : "border border-transparent")}>
+                    <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-3 rounded-2xl transition-all duration-300 hover:bg-muted/80", index === currentIndex ? "bg-primary/5 shadow-sm border border-primary/10 scale-[1.02]" : "border border-transparent", compactQueue ? "p-1.5" : "p-2")}>
                       <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-4 text-left outline-none">
-                        <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl shadow-sm"><img src={song.thumbnail} className="aspect-square h-full w-full object-cover" /></div>
+                        <div className={cn("relative flex-shrink-0 overflow-hidden rounded-xl shadow-sm", compactQueue ? "h-10 w-10" : "h-14 w-14")}><img src={song.thumbnail} className="aspect-square h-full w-full object-cover" /></div>
                         <div className="flex-1 overflow-hidden">
-                          <p className={cn("truncate text-sm font-bold leading-tight", index === currentIndex ? "text-primary" : "text-foreground")}>{song.title}</p>
-                          <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5">{song.artist}</p>
+                          <p className={cn("truncate font-bold leading-tight", index === currentIndex ? "text-primary" : "text-foreground", compactQueue ? "text-xs" : "text-sm")}>{song.title}</p>
+                          <p className={cn("truncate font-semibold text-muted-foreground mt-0.5", compactQueue ? "text-[10px]" : "text-xs")}>{song.artist}</p>
                         </div>
                       </button>
                       
@@ -1631,7 +1656,7 @@ export function AudioPlayer() {
                 </div>
 
                 <div className="w-full mb-8">
-                  <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
+                  <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
                   <div className="flex justify-between text-sm font-bold text-muted-foreground">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
@@ -1709,12 +1734,12 @@ export function AudioPlayer() {
                <h3 className="font-extrabold text-2xl mb-6 flex items-center gap-3 text-foreground"><ListMusic className="text-primary"/> Up Next</h3>
                <div className="space-y-3">
                  {queue.map((song, index) => (
-                   <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-4 rounded-2xl p-3 transition-all duration-300", index === currentIndex ? "bg-primary/10 shadow-sm border border-primary/20" : "hover:bg-muted/80")}>
+                   <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-4 rounded-2xl transition-all duration-300", index === currentIndex ? "bg-primary/10 shadow-sm border border-primary/20" : "hover:bg-muted/80", compactQueue ? "p-2" : "p-3")}>
                      <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-4 text-left outline-none min-w-0">
-                       <img src={song.thumbnail} className="h-16 w-16 aspect-square rounded-xl object-cover shadow-sm flex-shrink-0" />
+                       <img src={song.thumbnail} className={cn("aspect-square rounded-xl object-cover shadow-sm flex-shrink-0", compactQueue ? "h-12 w-12" : "h-16 w-16")} />
                        <div className="flex-1 min-w-0 overflow-hidden">
-                         <p className={cn("truncate text-base font-bold", index === currentIndex ? "text-primary" : "text-foreground")}>{song.title}</p>
-                         <p className="truncate text-sm font-semibold text-muted-foreground mt-0.5">{song.artist}</p>
+                         <p className={cn("truncate font-bold", index === currentIndex ? "text-primary" : "text-foreground", compactQueue ? "text-sm" : "text-base")}>{song.title}</p>
+                         <p className={cn("truncate font-semibold text-muted-foreground mt-0.5", compactQueue ? "text-xs" : "text-sm")}>{song.artist}</p>
                        </div>
                      </button>
                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10 hover:bg-destructive/20 outline-none focus:outline-none"><X className="h-5 w-5 text-current" /></Button>
@@ -1773,6 +1798,17 @@ export function AudioPlayer() {
                  </div>
                  <Switch checked={hideCreatorsPicks} onCheckedChange={(val) => { setHideCreatorsPicks(val); localStorage.setItem('ganvo_hide_picks', val.toString()) }} className="shrink-0" />
                </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Rows3 className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-bold text-base text-foreground">Compact queue layout</span>
+                     <span className="text-xs font-normal text-muted-foreground">Shrink queue items to show more per page.</span>
+                   </div>
+                 </div>
+                 <Switch checked={compactQueue} onCheckedChange={(val) => { setCompactQueue(val); localStorage.setItem('ganvo_compact_queue', val.toString()) }} className="shrink-0" />
+               </div>
              </div>
              
              {/* Player Settings */}
@@ -1811,8 +1847,19 @@ export function AudioPlayer() {
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
+                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
                   />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Maximize2 className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Auto-switch to player</span>
+                     <span className="text-xs font-normal text-muted-foreground">Jump to Player tab when selecting a song.</span>
+                   </div>
+                 </div>
+                 <Switch checked={autoSwitchToPlayer} onCheckedChange={(val) => { setAutoSwitchToPlayer(val); localStorage.setItem('ganvo_auto_switch_player', val.toString()) }} className="shrink-0" />
                </div>
                
              </div>
@@ -1923,6 +1970,18 @@ export function AudioPlayer() {
              {/* Data Settings */}
              <div className="px-4 py-4 space-y-1">
                <h3 className="text-[13px] font-bold text-primary mb-4 ml-2">Data & Privacy</h3>
+               
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><History className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Save search history</span>
+                     <span className="text-xs font-normal text-muted-foreground">Remember your previous searches.</span>
+                   </div>
+                 </div>
+                 <Switch checked={saveSearchHistory} onCheckedChange={(val) => { setSaveSearchHistory(val); localStorage.setItem('ganvo_save_history', val.toString()) }} className="shrink-0" />
+               </div>
+
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-destructive/10 transition-colors text-destructive" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
                  <div className="flex items-center gap-4">
                    <div className="p-2 bg-destructive/10 rounded-full text-current"><Trash2 className="w-5 h-5 text-current"/></div>
