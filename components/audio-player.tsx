@@ -86,7 +86,7 @@ export function AudioPlayer() {
   const[duration, setDuration] = useState(0)
   const[volume, setVolume] = useState(80)
   const[isMuted, setIsMuted] = useState(false)
-  const [shuffle, setShuffle] = useState(false)
+  const[shuffle, setShuffle] = useState(false)
   const[repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
   const[isLoading, setIsLoading] = useState(false)
   const[loadError, setLoadError] = useState<string | null>(null)
@@ -112,22 +112,22 @@ export function AudioPlayer() {
   const[currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
 
   const[showAboutDialog, setShowAboutDialog] = useState(false)
-  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
-  const [showEffectsDialog, setShowEffectsDialog] = useState(false)
+  const[showEffectsDialog, setShowEffectsDialog] = useState(false)
   const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const[newPlaylistName, setNewPlaylistName] = useState("")
   
-  const [dynamicTheme, setDynamicTheme] = useState(true)
+  const[dynamicTheme, setDynamicTheme] = useState(true)
   const[playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
   const[thumbnailRadius, setThumbnailRadius] = useState(32)
   const[dominantColor, setDominantColor] = useState<string | null>(null)
-  const [lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
-  const [lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
+  const[lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
+  const[lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
   const[audioQuality, setAudioQuality] = useState<'High' | 'Standard' | 'Low'>('High')
   const[autoPlaySimilar, setAutoPlaySimilar] = useState(false)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const[audioUrl, setAudioUrl] = useState<string | null>(null)
   
   const[showAuthDialog, setShowAuthDialog] = useState(false)
   const [user, setUser] = useState<FirebaseUser | null>(null)
@@ -1245,14 +1245,14 @@ export function AudioPlayer() {
                 </div>
              </div>
           ) :['player', 'lyrics', 'queue', 'library'].includes(activeTab) ? (
-            <div className="flex flex-1 flex-col items-center justify-center px-4 py-6 md:px-8 relative h-full">
+            <div className="flex flex-1 flex-col items-center px-4 py-8 md:px-8 md:py-12 relative min-h-full">
               {loadError && (
                 <div className="absolute top-4 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center mx-4">
                   {loadError}
                 </div>
               )}
               {currentSong ? (
-                <div className="flex w-full max-w-[480px] flex-col items-center animate-in fade-in zoom-in-95 duration-700 ease-out">
+                <div className="flex w-full max-w-[480px] flex-col items-center animate-in fade-in zoom-in-95 duration-700 ease-out m-auto">
                   
                   <div
                     className={cn(
@@ -1318,7 +1318,7 @@ export function AudioPlayer() {
                   <div className="flex w-full items-center justify-between gap-3 px-2">
                     <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
                       <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground outline-none focus:outline-none"><VolumeIcon className="h-5 w-5 text-current" /></Button>
-                      <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground[&_[data-slot=thumb]]:h-4[&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5[&_[data-slot=track]]:bg-foreground/10" />
+                      <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing[&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4[&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5[&_[data-slot=track]]:bg-foreground/10" />
                       <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
                     </div>
                   </div>
@@ -1326,7 +1326,7 @@ export function AudioPlayer() {
                   <div className="h-40 shrink-0 lg:hidden w-full opacity-0 pointer-events-none" />
                 </div>
               ) : (
-                <div className="flex flex-col items-center px-4 text-center animate-in fade-in zoom-in-95 duration-700 ease-out">
+                <div className="flex flex-col items-center px-4 text-center animate-in fade-in zoom-in-95 duration-700 ease-out m-auto">
                   <div className="mb-8 flex h-40 w-40 items-center justify-center rounded-[2.5rem] bg-muted/50 shadow-inner transition-all duration-700 hover:scale-105">
                     <Music2 className="h-20 w-20 text-muted-foreground/40 transition-transform duration-700" />
                   </div>
@@ -1599,7 +1599,7 @@ export function AudioPlayer() {
             mobilePlayerTab === 'player' ? "opacity-100 pointer-events-auto overflow-y-auto px-6 pb-6 no-scrollbar" : "opacity-0 pointer-events-none overflow-hidden"
           )}>
             {currentSong && (
-              <div className="flex flex-col items-center min-h-full py-4 animate-in fade-in zoom-in-95 duration-500 relative">
+              <div className="flex flex-col items-center min-h-full py-4 animate-in fade-in zoom-in-95 duration-500 relative m-auto">
                 {loadError && (
                   <div className="absolute top-0 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center">
                     {loadError}
@@ -1833,7 +1833,7 @@ export function AudioPlayer() {
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-blue-500[&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
+                    className="[&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
                   />
                </div>
                
