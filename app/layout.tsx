@@ -38,6 +38,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background">
+      <head>
+        {/* Load the entire Material Symbols font library with variable axes (FILL, WEIGHT, GRADE, OPTICAL SIZE) */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+      </head>
       <body className={`${roboto.variable} font-sans antialiased`}>
         {children}
         <Analytics />
