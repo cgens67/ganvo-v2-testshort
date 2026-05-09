@@ -872,24 +872,60 @@ export function AudioPlayer() {
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
   const showSearchDropdown = searchFocused && (searchResults.length > 0 || isSearching || (searchQuery.trim() === "" && searchHistory.length > 0))
 
+  const VolumeControls = ({ className }: { className?: string }) => (
+    <div className={cn("flex items-center gap-3 w-full px-2 mt-auto pb-8", className)}>
+      <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
+        <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground outline-none focus:outline-none"><VolumeIcon className="text-[20px] text-current" /></Button>
+        <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10" />
+        <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
+      </div>
+    </div>
+  )
+
   // MOBILE PLAYER RENDERING STRATEGIES
   const renderClassicPlayer = () => (
     <div className="flex flex-col items-center min-h-full py-4 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
-      <div className="w-full max-w-[360px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center" style={{ borderRadius: `${thumbnailRadius}px` }}>
+      <div className="w-full max-w-[320px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center" style={{ borderRadius: `${thumbnailRadius}px` }}>
          <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out absolute inset-0", isPlaying ? "scale-105" : "scale-100")} />
+         {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-md z-10">
+              <Loader2 className="h-12 w-12 animate-spin text-white mb-2" />
+            </div>
+          )}
       </div>
-      <div className="w-full flex items-center justify-between gap-4 mb-6 px-4">
-         <div className="flex-1 min-w-0 text-left">
-            <h2 className="text-3xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
-            <p className="text-lg font-semibold text-muted-foreground truncate">{currentSong.artist}</p>
+      <div className="w-full flex items-center px-4 mb-6">
+         <div className="w-12 h-12 shrink-0" />
+         <div className="flex-1 min-w-0 text-center px-4">
+            <h2 className="text-2xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
+            <button onClick={() => currentSong.artistId && loadArtistView(currentSong.artistId)} className="max-w-full text-base font-semibold text-muted-foreground/80 hover:text-primary hover:underline transition-colors outline-none focus:outline-none truncate">{currentSong.artist}</button>
          </div>
-         <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-14 w-14 flex-shrink-0 p-0 rounded-full text-foreground hover:bg-primary/10 outline-none focus:outline-none">
-            <Heart className={cn("h-8 w-8 transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
+         <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-12 w-12 flex-shrink-0 p-0 rounded-full text-foreground hover:bg-primary/10 outline-none focus:outline-none">
+            <Heart className={cn("h-6 w-6 transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
          </Button>
       </div>
+      
+      {showPlaybackSpeed && (
+        <div className="flex w-full items-center justify-between px-4 mb-2">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Gauge className="w-4 h-4"/> Speed</span>
+          <Select value={playbackRate.toString()} onValueChange={(v: any) => setPlaybackRate(parseFloat(v))}>
+            <SelectTrigger className="w-[80px] h-8 rounded-full border-none bg-muted/50 text-xs font-bold focus:ring-0 outline-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl z-[500]">
+              <SelectItem value="0.5" className="text-xs font-bold py-2">0.5x</SelectItem>
+              <SelectItem value="0.75" className="text-xs font-bold py-2">0.75x</SelectItem>
+              <SelectItem value="1" className="text-xs font-bold py-2">1x</SelectItem>
+              <SelectItem value="1.25" className="text-xs font-bold py-2">1.25x</SelectItem>
+              <SelectItem value="1.5" className="text-xs font-bold py-2">1.5x</SelectItem>
+              <SelectItem value="2" className="text-xs font-bold py-2">2x</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="w-full mb-8 px-4">
         <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
-        <div className="flex justify-between text-sm font-bold text-muted-foreground">
+        <div className="flex justify-between text-xs font-bold text-muted-foreground">
           <span>{formatTime(currentTime)}</span>
           <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
         </div>
@@ -905,6 +941,8 @@ export function AudioPlayer() {
           {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
         </Button>
       </div>
+      
+      <VolumeControls />
     </div>
   )
 
@@ -937,7 +975,7 @@ export function AudioPlayer() {
           <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
         </div>
       </div>
-      <div className="flex items-center justify-between w-full mb-auto px-6">
+      <div className="flex items-center justify-between w-full mb-8 px-6">
         <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 p-0 rounded-full", shuffle ? "text-primary" : "text-muted-foreground")}><Shuffle className="text-[24px]" /></Button>
         <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 p-0 rounded-full text-foreground"><SkipBack className="text-[32px]" /></Button>
         <Button size="icon" onClick={togglePlay} className="h-20 w-20 p-0 rounded-full bg-foreground text-background shadow-xl hover:scale-105 transition-transform active:scale-95">
@@ -948,7 +986,10 @@ export function AudioPlayer() {
           {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
         </Button>
       </div>
-      <div className="flex w-full gap-4 mt-6 mb-2 px-4">
+
+      <VolumeControls className="mt-0" />
+
+      <div className="flex w-full gap-4 mt-2 mb-2 px-4">
          <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('queue')}><ListMusic className="mr-2 h-5 w-5"/> Queue</Button>
          <Button variant="secondary" size="icon" className="w-14 h-14 shrink-0 rounded-2xl bg-muted/60" onClick={() => setIsDark(!isDark)}><Moon className="h-5 w-5"/></Button>
          <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('lyrics')}><AlignLeft className="mr-2 h-5 w-5"/> Lyrics</Button>
@@ -995,14 +1036,16 @@ export function AudioPlayer() {
          <Button variant="ghost" onClick={playNext} className="flex-1 h-16 rounded-[2rem] text-primary"><SkipForward className="text-[28px]"/></Button>
       </div>
       
-      <div className="flex justify-center gap-8 mt-6 mb-auto w-full">
+      <div className="flex justify-center gap-8 mt-6 mb-8 w-full">
          <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full bg-muted/30", shuffle ? "text-primary bg-primary/10" : "text-muted-foreground")}><Shuffle className="text-[20px]" /></Button>
          <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full bg-muted/30", repeatMode !== "off" ? "text-primary bg-primary/10" : "text-muted-foreground")}>
            {repeatMode === "one" ? <Repeat1 className="text-[20px]" /> : <Repeat className="text-[20px]" />}
          </Button>
       </div>
 
-      <div className="flex w-full gap-4 mt-6 mb-2 px-4">
+      <VolumeControls className="mt-0" />
+
+      <div className="flex w-full gap-4 mt-2 mb-2 px-4">
          <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('queue')}><ListMusic className="mr-2 h-5 w-5"/> Queue</Button>
          <Button variant="secondary" size="icon" className="w-14 h-14 shrink-0 rounded-2xl bg-muted/60" onClick={() => setIsDark(!isDark)}><Moon className="h-5 w-5"/></Button>
          <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('lyrics')}><AlignLeft className="mr-2 h-5 w-5"/> Lyrics</Button>
@@ -1011,23 +1054,38 @@ export function AudioPlayer() {
   )
 
   const renderMinimalPlayer = () => (
-    <div className="flex flex-col items-center justify-center min-h-full py-12 w-full max-w-[480px] animate-in fade-in duration-500 relative m-auto px-8">
-      <div className="w-full aspect-square mx-auto overflow-hidden relative shrink-0 mb-12 flex items-center justify-center rounded-sm">
-         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-all duration-[3s] ease-out", isPlaying ? "scale-105 opacity-100" : "scale-100 opacity-90")} />
+    <div className="flex flex-col items-center justify-center min-h-full py-8 w-full max-w-[480px] animate-in fade-in duration-500 relative m-auto px-6">
+      <div className="w-full max-w-[280px] aspect-square mx-auto overflow-hidden shadow-sm relative shrink-0 mb-10 flex items-center justify-center rounded-lg border border-border/20">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-opacity duration-[2s]", isPlaying ? "opacity-100" : "opacity-80")} />
       </div>
-      <div className="w-full text-center mb-10">
-        <h2 className="text-xl font-medium truncate text-foreground">{currentSong.title}</h2>
-        <p className="text-sm font-normal text-muted-foreground/60 truncate mt-1">{currentSong.artist}</p>
-      </div>
-      <div className="w-full mb-12">
-        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:hidden [&_[data-slot=track]]:h-[1px] [&_[data-slot=track]]:bg-muted-foreground/20" />
-      </div>
-      <div className="flex items-center justify-center gap-12 w-full">
-        <Button variant="ghost" size="icon" onClick={playPrevious} className="h-10 w-10 text-muted-foreground/50 hover:text-foreground"><SkipBack className="text-[20px] font-light" /></Button>
-        <Button variant="ghost" size="icon" onClick={togglePlay} className="h-14 w-14 text-foreground">
-           {isPlaying ? <Pause className="text-[32px] font-light" /> : <Play className="text-[32px] font-light" />}
+      
+      <div className="w-full text-center mb-8 px-4 flex flex-col items-center">
+        <h2 className="text-xl font-medium truncate text-foreground tracking-tight w-full">{currentSong.title}</h2>
+        <p className="text-sm font-normal text-muted-foreground truncate mt-1 w-full">{currentSong.artist}</p>
+        <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="mt-3 h-10 w-10 text-muted-foreground hover:bg-transparent">
+          <Heart className={cn("h-5 w-5 transition-all", likedSongs.has(currentSong.videoId) ? "fill-foreground text-foreground" : "text-current")} />
         </Button>
-        <Button variant="ghost" size="icon" onClick={playNext} className="h-10 w-10 text-muted-foreground/50 hover:text-foreground"><SkipForward className="text-[20px] font-light" /></Button>
+      </div>
+      
+      <div className="w-full mb-10 px-4">
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:hidden [&_[data-slot=track]]:h-[2px] [&_[data-slot=track]]:bg-muted-foreground/20" />
+        <div className="flex justify-between text-[10px] font-medium text-muted-foreground/50 mt-2">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-10 w-full mb-12">
+        <Button variant="ghost" size="icon" onClick={playPrevious} className="h-12 w-12 text-muted-foreground hover:text-foreground"><SkipBack className="text-[28px] font-light" /></Button>
+        <Button variant="ghost" size="icon" onClick={togglePlay} className="h-16 w-16 p-0 flex items-center justify-center text-foreground hover:bg-muted/20 rounded-full">
+           {isPlaying ? <Pause className="text-[40px] font-light" /> : <Play className="text-[40px] font-light" />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={playNext} className="h-12 w-12 text-muted-foreground hover:text-foreground"><SkipForward className="text-[28px] font-light" /></Button>
+      </div>
+      
+      <div className="flex items-center gap-3 w-full px-8 mt-auto pb-4 opacity-50 hover:opacity-100 transition-opacity">
+        <VolumeIcon className="text-[16px]" />
+        <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-3 [&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1 [&_[data-slot=track]]:bg-foreground/10" />
       </div>
     </div>
   )
@@ -1035,7 +1093,7 @@ export function AudioPlayer() {
   const renderCinematicPlayer = () => (
     <div className="absolute inset-0 flex flex-col items-center justify-end w-full animate-in fade-in duration-1000 z-50">
       <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
-        <img src={currentSong.thumbnail} className={cn("w-full h-[70vh] object-cover opacity-80 blur-sm scale-110", isPlaying && "animate-pulse")} />
+        <img src={currentSong.thumbnail} className={cn("w-full h-[70vh] object-cover opacity-80 blur-sm scale-110 transition-transform duration-[10s]", isPlaying && "scale-125")} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
       </div>
       <div className="w-full px-6 pb-12 pt-32 max-w-[480px]">
@@ -1044,7 +1102,7 @@ export function AudioPlayer() {
             <h2 className="text-4xl font-black text-white truncate drop-shadow-lg">{currentSong.title}</h2>
             <p className="text-lg font-bold text-white/70 truncate mt-1">{currentSong.artist}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/70 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/70 hover:text-white shrink-0 h-14 w-14">
              <Heart className={cn("text-[28px] drop-shadow-md", likedSongs.has(currentSong.videoId) ? "fill-white text-white scale-110" : "")} />
           </Button>
         </div>
@@ -1055,14 +1113,19 @@ export function AudioPlayer() {
             <span>{formatTime(duration)}</span>
           </div>
         </div>
-        <div className="flex items-center justify-between w-full">
+        <div className="flex items-center justify-between w-full mb-10">
           <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("text-white/50", shuffle && "text-white")}><Shuffle className="text-[24px]" /></Button>
           <Button variant="ghost" size="icon" onClick={playPrevious} className="text-white"><SkipBack className="text-[36px]" /></Button>
-          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-20 w-20 text-white">
+          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-20 w-20 p-0 text-white flex items-center justify-center">
              {isPlaying ? <Pause className="text-[56px] drop-shadow-2xl" /> : <Play className="text-[56px] drop-shadow-2xl" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={playNext} className="text-white"><SkipForward className="text-[36px]" /></Button>
           <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("text-white/50", repeatMode !== "off" && "text-white")}><Repeat className="text-[24px]" /></Button>
+        </div>
+        
+        <div className="flex items-center gap-3 w-full opacity-50 hover:opacity-100 transition-opacity text-white">
+          <VolumeIcon className="text-[16px]" />
+          <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 [&_[data-slot=range]]:bg-white [&_[data-slot=thumb]]:h-3 [&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1 [&_[data-slot=track]]:bg-white/20" />
         </div>
       </div>
     </div>
@@ -1070,54 +1133,72 @@ export function AudioPlayer() {
 
   const renderExpressivePlayer = () => (
     <div className="flex flex-col items-center min-h-full py-8 w-full max-w-[480px] animate-in slide-in-from-bottom-8 duration-700 relative m-auto px-6">
-      <div className={cn("w-64 h-64 mx-auto overflow-hidden shadow-[0_0_80px_rgba(var(--primary),0.5)] relative mb-12 shrink-0 flex items-center justify-center rounded-full border-4 border-background transition-transform duration-1000", isPlaying ? "rotate-180 scale-105" : "")}>
+      <div className={cn("w-64 h-64 mx-auto overflow-hidden shadow-[0_0_80px_rgba(var(--primary),0.5)] relative mb-12 shrink-0 flex items-center justify-center rounded-full border-4 border-background transition-transform duration-1000", isPlaying ? "animate-[spin_10s_linear_infinite] scale-105" : "scale-100")}>
          <img src={currentSong.thumbnail} className="w-full h-full object-cover" />
          <div className="absolute inset-0 border-[6px] border-primary/20 rounded-full pointer-events-none" />
          <div className="absolute w-12 h-12 bg-background rounded-full border-4 border-primary/20 shadow-inner z-10" />
       </div>
       <div className="w-full text-center mb-8 px-4 bg-card/40 backdrop-blur-3xl py-6 rounded-[2rem] border border-white/10 shadow-xl">
-         <h2 className="text-2xl font-black truncate text-foreground mb-1 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{currentSong.title}</h2>
+         <div className="flex items-center justify-between gap-2 mb-2">
+            <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-muted-foreground hover:bg-transparent h-8 w-8">
+               <Heart className={cn("text-[20px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
+            </Button>
+            <h2 className="text-2xl font-black truncate flex-1 text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{currentSong.title}</h2>
+            <div className="w-8 h-8" />
+         </div>
          <p className="text-sm font-bold text-muted-foreground truncate uppercase tracking-widest">{currentSong.artist}</p>
          
-         <div className="w-full mt-8 mb-6">
-            <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-gradient-to-r [&_[data-slot=range]]:from-primary [&_[data-slot=range]]:to-secondary [&_[data-slot=thumb]]:h-6 [&_[data-slot=thumb]]:w-6 [&_[data-slot=thumb]]:border-4 [&_[data-slot=thumb]]:border-primary [&_[data-slot=track]]:h-3 [&_[data-slot=track]]:bg-muted rounded-full" />
+         <div className="w-full mt-8 mb-6 px-4">
+            <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-gradient-to-r [&_[data-slot=range]]:from-primary [&_[data-slot=range]]:to-secondary [&_[data-slot=thumb]]:h-6 [&_[data-slot=thumb]]:w-6[&_[data-slot=thumb]]:border-4 [&_[data-slot=thumb]]:border-primary [&_[data-slot=track]]:h-3 [&_[data-slot=track]]:bg-muted rounded-full" />
          </div>
 
          <div className="flex items-center justify-center gap-6 w-full">
-            <Button variant="ghost" size="icon" onClick={playPrevious} className="h-14 w-14 rounded-full bg-background shadow-md text-primary"><SkipBack className="text-[28px]" /></Button>
-            <Button onClick={togglePlay} className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-2xl hover:scale-110 transition-transform">
+            <Button variant="ghost" size="icon" onClick={playPrevious} className="h-14 w-14 p-0 rounded-full bg-background shadow-md text-primary flex items-center justify-center"><SkipBack className="text-[28px]" /></Button>
+            <Button size="icon" onClick={togglePlay} className="h-20 w-20 p-0 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-2xl hover:scale-110 transition-transform">
                {isPlaying ? <Pause className="text-[36px]" /> : <Play className="text-[36px]" />}
             </Button>
-            <Button variant="ghost" size="icon" onClick={playNext} className="h-14 w-14 rounded-full bg-background shadow-md text-primary"><SkipForward className="text-[28px]" /></Button>
+            <Button variant="ghost" size="icon" onClick={playNext} className="h-14 w-14 p-0 rounded-full bg-background shadow-md text-primary flex items-center justify-center"><SkipForward className="text-[28px]" /></Button>
          </div>
       </div>
+      <VolumeControls className="mt-0 pb-0" />
     </div>
   )
 
   const renderImmersivePlayer = () => (
-    <div className="absolute inset-0 flex flex-col items-center justify-center w-full animate-in fade-in duration-1000 z-50 overflow-hidden">
-      <div className="w-[85vw] max-w-[400px] aspect-square overflow-hidden rounded-[3rem] shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-10 mb-12">
-         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[3s] ease-out", isPlaying && "scale-110")} />
+    <div className="absolute inset-0 flex flex-col items-center justify-center w-full animate-in fade-in duration-1000 z-50 overflow-hidden bg-black">
+      <div className="absolute inset-0 z-0">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover blur-[80px] opacity-60 scale-125 transition-transform duration-[10s]", isPlaying && "scale-150")} />
+         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
       </div>
-      <div className="w-full max-w-[400px] bg-black/20 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 z-10 text-white shadow-2xl">
+      
+      <div className="w-[80vw] max-w-[340px] aspect-square rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 mb-8 border border-white/10">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[3s] ease-out", isPlaying ? "scale-105" : "scale-100")} />
+      </div>
+      
+      <div className="w-full max-w-[420px] bg-black/20 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 z-10 text-white shadow-2xl mx-4">
         <div className="flex justify-between items-center mb-6">
           <div className="flex-1 min-w-0 pr-4">
-            <h2 className="text-2xl font-bold truncate">{currentSong.title}</h2>
+            <h2 className="text-2xl font-bold truncate drop-shadow-sm">{currentSong.title}</h2>
             <p className="text-sm font-medium text-white/60 truncate mt-1">{currentSong.artist}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/60 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/60 hover:text-white bg-white/5 rounded-full h-12 w-12 shrink-0 flex items-center justify-center p-0">
              <Heart className={cn("text-[24px]", likedSongs.has(currentSong.videoId) ? "fill-white text-white" : "")} />
           </Button>
         </div>
         <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-6 [&_[data-slot=range]]:bg-white[&_[data-slot=thumb]]:bg-white [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-white/20" />
-        <div className="flex items-center justify-between w-full px-2">
-          <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("text-white/40 hover:text-white", shuffle && "text-white")}><Shuffle className="text-[20px]" /></Button>
-          <Button variant="ghost" size="icon" onClick={playPrevious} className="text-white hover:bg-white/10"><SkipBack className="text-[32px]" /></Button>
-          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-16 w-16 text-white hover:bg-white/10 bg-white/5 rounded-full">
+        <div className="flex items-center justify-between w-full px-2 mb-6">
+          <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("text-white/40 hover:text-white flex items-center justify-center p-0", shuffle && "text-white")}><Shuffle className="text-[20px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={playPrevious} className="text-white hover:bg-white/10 flex items-center justify-center p-0"><SkipBack className="text-[32px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-16 w-16 p-0 text-white hover:bg-white/10 bg-white/5 rounded-full flex items-center justify-center shadow-lg">
              {isPlaying ? <Pause className="text-[40px]" /> : <Play className="text-[40px]" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={playNext} className="text-white hover:bg-white/10"><SkipForward className="text-[32px]" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("text-white/40 hover:text-white", repeatMode !== "off" && "text-white")}><Repeat className="text-[20px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={playNext} className="text-white hover:bg-white/10 flex items-center justify-center p-0"><SkipForward className="text-[32px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("text-white/40 hover:text-white flex items-center justify-center p-0", repeatMode !== "off" && "text-white")}><Repeat className="text-[20px]" /></Button>
+        </div>
+        
+        <div className="flex items-center gap-3 w-full px-2 opacity-50 hover:opacity-100 transition-opacity text-white">
+          <VolumeIcon className="text-[16px]" />
+          <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1[&_[data-slot=range]]:bg-white [&_[data-slot=thumb]]:h-3 [&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1 [&_[data-slot=track]]:bg-white/20" />
         </div>
       </div>
     </div>
@@ -1429,7 +1510,7 @@ export function AudioPlayer() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
-                              <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 text-foreground h-10 w-10 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none">
+                              <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 text-foreground h-10 w-10 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
                                 <Play className="text-[20px] translate-x-[1px]"/>
                               </Button>
                             </div>
@@ -1497,10 +1578,10 @@ export function AudioPlayer() {
                             </DropdownMenu>
                           )}
 
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none">
+                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
                             <Play className="text-[16px] md:mr-1"/> <span className="hidden md:inline">Play</span>
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
                             <Heart className={cn("h-5 w-5", likedSongs.has(song.videoId) && "fill-current text-current")} />
                           </Button>
                         </div>
@@ -1561,7 +1642,7 @@ export function AudioPlayer() {
                         <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 text-foreground">{currentAlbumData.name}</h1>
                         <p className="text-muted-foreground font-semibold mb-4 text-lg cursor-pointer hover:underline hover:text-primary transition-colors" onClick={() => currentAlbumData.songs[0]?.artistId && loadArtistView(currentAlbumData.songs[0].artistId)}>{currentAlbumData.artist} • {currentAlbumData.year}</p>
                         <div className="flex gap-3 justify-center md:justify-start">
-                          <Button onClick={() => addToQueueAndPlay(currentAlbumData.songs[0])} className="rounded-full font-bold text-base px-8 h-12 shadow-lg hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none">
+                          <Button onClick={() => addToQueueAndPlay(currentAlbumData.songs[0])} className="rounded-full font-bold text-base px-8 h-12 shadow-lg hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none flex items-center justify-center p-0">
                             <Play className="text-[20px] mr-2"/> Play Album
                           </Button>
                         </div>
@@ -1591,10 +1672,10 @@ export function AudioPlayer() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none">
+                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
                             <Play className="text-[20px] translate-x-[1px]"/>
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
                             <Heart className={cn("h-5 w-5", likedSongs.has(song.videoId) && "fill-current text-current")} />
                           </Button>
                         </div>
@@ -1620,7 +1701,7 @@ export function AudioPlayer() {
                       <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-2 text-foreground">{currentPlaylistView.name}</h1>
                       <p className="text-muted-foreground font-semibold mb-6 text-lg">{currentPlaylistView.songs.length} songs</p>
                       <div className="flex gap-3 justify-center md:justify-start">
-                        <Button onClick={() => {if(currentPlaylistView.songs.length>0) addToQueueAndPlay(currentPlaylistView.songs[0])}} disabled={currentPlaylistView.songs.length===0} className="rounded-full font-bold text-base px-8 h-12 shadow-lg hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none">
+                        <Button onClick={() => {if(currentPlaylistView.songs.length>0) addToQueueAndPlay(currentPlaylistView.songs[0])}} disabled={currentPlaylistView.songs.length===0} className="rounded-full font-bold text-base px-8 h-12 shadow-lg hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none flex items-center justify-center p-0">
                           <Play className="text-[20px] mr-2"/> Play Playlist
                         </Button>
                       </div>
@@ -1639,10 +1720,10 @@ export function AudioPlayer() {
                           </div>
                           <span className="text-xs font-bold tabular-nums text-muted-foreground/50 mr-2">{formatTime(song.duration)}</span>
                           
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none">
+                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-sm text-foreground bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
                             <Play className="text-[20px] translate-x-[1px]"/>
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
                             <Heart className={cn("h-5 w-5", likedSongs.has(song.videoId) && "fill-current text-current")} />
                           </Button>
                         </div>
@@ -1683,24 +1764,28 @@ export function AudioPlayer() {
 
         {/* Desktop Sidebar - Queue, Lyrics, Library */}
         <div className="hidden w-80 flex-col border-l border-border/40 bg-card/40 backdrop-blur-2xl lg:flex xl:w-[420px] overflow-hidden min-h-0 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-20 transition-all duration-500">
-          <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40 flex-wrap transition-colors duration-300">
-            {['player', 'explore', 'queue', 'lyrics', 'library'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs xl:text-sm font-bold transition-all duration-300 ease-out active:scale-95 flex-1 outline-none focus:outline-none",
-                  activeTab === tab ? "bg-background shadow-sm text-foreground scale-105" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                )}
-              >
-                {tab === 'player' && <Play className="text-[16px]" />}
-                {tab === 'explore' && <TrendingUp className="h-4 w-4 text-current" />}
-                {tab === 'queue' && <ListMusic className="h-4 w-4 text-current" />}
-                {tab === 'lyrics' && <Mic2 className="h-4 w-4 text-current" />}
-                {tab === 'library' && <Library className="h-4 w-4 text-current" />}
-                <span className="capitalize hidden xl:inline">{tab}</span>
-              </button>
-            ))}
+          <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40 flex-wrap transition-colors duration-300 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-muted/20 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-muted/20 to-transparent z-10 pointer-events-none" />
+            <div className="flex w-full overflow-x-auto no-scrollbar gap-2 px-2 snap-x">
+              {['player', 'explore', 'queue', 'lyrics', 'library'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs xl:text-sm font-bold transition-all duration-300 ease-out active:scale-95 shrink-0 snap-center outline-none focus:outline-none",
+                    activeTab === tab ? "bg-background shadow-sm text-foreground scale-105" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  )}
+                >
+                  {tab === 'player' && <Play className="text-[16px]" />}
+                  {tab === 'explore' && <TrendingUp className="h-4 w-4 text-current" />}
+                  {tab === 'queue' && <ListMusic className="h-4 w-4 text-current" />}
+                  {tab === 'lyrics' && <Mic2 className="h-4 w-4 text-current" />}
+                  {tab === 'library' && <Library className="h-4 w-4 text-current" />}
+                  <span className="capitalize hidden xl:inline">{tab}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className={cn(
@@ -1788,7 +1873,7 @@ export function AudioPlayer() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-8 w-8 text-[var(--google-red)] opacity-100 flex items-center justify-center transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90 outline-none focus:outline-none">
+                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-8 w-8 text-[var(--google-red)] opacity-100 flex items-center justify-center transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90 outline-none focus:outline-none p-0">
                               <Heart className="h-4 w-4 fill-current text-current transition-transform duration-500 hover:scale-110" />
                             </Button>
                           </div>
@@ -1828,7 +1913,7 @@ export function AudioPlayer() {
                         </DropdownMenu>
                       )}
 
-                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100 outline-none focus:outline-none"><X className="h-4 w-4 text-current" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100 outline-none focus:outline-none p-0"><X className="h-4 w-4 text-current" /></Button>
                     </div>
                   ))
                 ) : (
@@ -1911,7 +1996,10 @@ export function AudioPlayer() {
           <Button variant="ghost" size="icon" onClick={() => setIsMobilePlayerExpanded(false)} className="h-12 w-12 rounded-full hover:bg-muted active:scale-90 text-foreground outline-none focus:outline-none">
             <ChevronDown className="h-8 w-8 text-current" />
           </Button>
-          <div className="flex bg-muted/50 rounded-full p-1 gap-1">
+          
+          <div className="flex bg-muted/50 rounded-full p-1 gap-1 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background/50 to-transparent pointer-events-none rounded-l-full" />
+            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background/50 to-transparent pointer-events-none rounded-r-full" />
             <Button variant={mobilePlayerTab === 'player' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('player')} className="rounded-full px-4 font-bold text-xs text-foreground outline-none focus:outline-none">Player</Button>
             <Button variant={mobilePlayerTab === 'lyrics' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('lyrics')} className="rounded-full px-4 font-bold text-xs text-foreground outline-none focus:outline-none">Lyrics</Button>
             <Button variant={mobilePlayerTab === 'queue' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('queue')} className="rounded-full px-4 font-bold text-xs text-foreground outline-none focus:outline-none">Queue</Button>
@@ -2003,7 +2091,7 @@ export function AudioPlayer() {
                          <p className={cn("truncate font-semibold text-muted-foreground mt-0.5", compactQueue ? "text-xs" : "text-sm")}>{song.artist}</p>
                        </div>
                      </button>
-                     <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10 hover:bg-destructive/20 outline-none focus:outline-none"><X className="h-5 w-5 text-current" /></Button>
+                     <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10 hover:bg-destructive/20 outline-none focus:outline-none p-0"><X className="h-5 w-5 text-current" /></Button>
                    </div>
                  ))}
                </div>
@@ -2016,58 +2104,71 @@ export function AudioPlayer() {
       {/* --- ALL DIALOGS (SETTINGS, EFFECTS, AUTH, PLAYLISTS, CREDITS) --- */}
       
       <Dialog open={showColorPalette} onOpenChange={setShowColorPalette}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[500]">
-          <div className="flex items-center gap-4 p-5">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[500] max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="flex items-center gap-4 p-5 shrink-0">
             <Button variant="ghost" size="icon" onClick={() => setShowColorPalette(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
             <h2 className="text-xl font-bold text-foreground">Color Palette</h2>
           </div>
-          <div className="px-6 pb-6">
+          <div className="px-6 flex-1 overflow-y-auto no-scrollbar pb-6">
             
             {/* Preview Card */}
-            <div className="w-full h-56 rounded-3xl relative overflow-hidden shadow-xl mb-8 flex flex-col justify-end p-6 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#1e293b' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}>
-               <div className="absolute top-6 left-6 w-16 h-12 rounded-xl bg-white/20 backdrop-blur-sm" />
-               <div className="absolute top-[80px] left-6 w-32 h-1.5 rounded-full bg-white/30" />
-               <div className="absolute top-[80px] left-6 w-20 h-1.5 rounded-full bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+            <div className="w-full h-56 rounded-3xl relative shadow-xl mb-8 flex flex-col justify-between p-6 transition-colors duration-500 overflow-hidden" style={{ backgroundColor: colorTheme === 'default' ? '#0f172a' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}>
+               <div className="flex justify-between items-start z-10 relative w-full">
+                  <div className="space-y-4 w-1/2">
+                     <div className="w-12 h-10 rounded-xl bg-white/20 backdrop-blur-md shadow-sm" />
+                     <div className="flex items-center">
+                        <div className="w-3/4 h-1.5 rounded-l-full bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+                        <div className="w-1/4 h-1.5 rounded-r-full bg-white/20" />
+                     </div>
+                  </div>
+                  
+                  <div className="w-14 h-14 shrink-0 rounded-full flex items-center justify-center shadow-lg bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }}>
+                     <Play className="text-[28px] text-white" />
+                  </div>
+               </div>
                
-               <div className="absolute top-6 right-6 w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }}>
-                  <Play className="text-[32px]" style={{ color: colorTheme === 'default' ? '#0f172a' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}/>
+               {/* Center overlapping circles */}
+               <div className="absolute inset-0 m-auto w-fit h-fit flex items-center justify-center z-0">
+                  <div className="w-16 h-16 rounded-full shadow-md bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+                  <div className="w-12 h-12 rounded-full shadow-md -ml-6 bg-white/80 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+                  <div className="w-8 h-8 rounded-full shadow-md -ml-4 bg-white/60 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
                </div>
 
-               {/* Overlapping decorative circles */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
-                  <div className="w-16 h-16 rounded-full transition-colors duration-500 shadow-md" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
-                  <div className="w-12 h-12 rounded-full transition-colors duration-500 shadow-md -ml-6" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
-                  <div className="w-8 h-8 rounded-full transition-colors duration-500 shadow-md -ml-4" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
-               </div>
-
-               {/* Bottom pill buttons */}
-               <div className="flex gap-3">
-                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
-                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
-                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+               {/* Bottom pills */}
+               <div className="flex gap-3 z-10 relative">
+                  <div className="w-14 h-8 rounded-full bg-white/10 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+                  <div className="w-14 h-8 rounded-full bg-white/10 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+                  <div className="w-14 h-8 rounded-full bg-white/10 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
                </div>
                
                {/* Label badge */}
-               <div className="absolute -bottom-2 -right-2 px-6 py-4 rounded-tl-2xl font-bold text-sm transition-colors duration-500 shadow-xl" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary, color: colorTheme === 'default' ? '#0f172a' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}>
-                  {COLOR_THEMES.find(t=>t.id===colorTheme)?.name}
+               <div className="absolute bottom-0 right-0 px-4 py-2 rounded-tl-2xl font-bold text-sm transition-colors duration-500 shadow-xl bg-white text-white" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }}>
+                  {COLOR_THEMES.find(t=>t.id===colorTheme)?.name || 'Default'}
                </div>
             </div>
 
             {/* Swatch Carousel */}
-            <div className="flex overflow-x-auto gap-4 pb-6 px-2 no-scrollbar snap-x">
-               {COLOR_THEMES.map(theme => (
-                 <div key={theme.id} onClick={() => { setColorTheme(theme.id); localStorage.setItem('ganvo_color_theme', theme.id); }} className={cn("relative shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center cursor-pointer transition-all active:scale-95 snap-center", colorTheme === theme.id ? "border-[3px] scale-105" : "border-2 border-transparent opacity-80 hover:opacity-100 bg-muted/40")} style={{ borderColor: colorTheme === theme.id ? theme.primary : undefined }}>
-                   <div className="w-12 h-12 rounded-full overflow-hidden flex transform -rotate-45 shadow-sm">
-                      <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary || '#94a3b8' }} />
-                      <div className="w-1/2 h-full" style={{ backgroundColor: theme.secondary }} />
-                   </div>
-                   {colorTheme === theme.id && (
-                     <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
-                       <MaterialIcon name="check" className="text-[16px]" style={{ color: theme.primary }} />
-                     </div>
-                   )}
-                 </div>
-               ))}
+            <div className="relative w-full mb-8">
+               <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent z-20 pointer-events-none" />
+               <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent z-20 pointer-events-none" />
+               
+               <div className="flex overflow-x-auto gap-4 py-2 no-scrollbar snap-x z-10">
+                  <div className="w-2 shrink-0" />
+                  {COLOR_THEMES.map(theme => (
+                    <div key={theme.id} onClick={() => { setColorTheme(theme.id); localStorage.setItem('ganvo_color_theme', theme.id); }} className={cn("relative shrink-0 w-20 h-20 rounded-[1.5rem] flex items-center justify-center cursor-pointer transition-all active:scale-95 snap-center", colorTheme === theme.id ? "border-[3px] scale-105" : "border-2 border-transparent opacity-80 hover:opacity-100 bg-muted/30")} style={{ borderColor: colorTheme === theme.id ? (theme.primary || '#94a3b8') : undefined }}>
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex transform -rotate-45 shadow-sm">
+                         <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary || '#94a3b8' }} />
+                         <div className="w-1/2 h-full" style={{ backgroundColor: theme.secondary }} />
+                      </div>
+                      {colorTheme === theme.id && (
+                        <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
+                          <MaterialIcon name="check" className="text-[16px]" style={{ color: theme.primary || '#0f172a' }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="w-2 shrink-0" />
+               </div>
             </div>
 
             <div className="flex flex-col gap-3 mt-4 items-end">
@@ -2240,7 +2341,7 @@ export function AudioPlayer() {
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
+                    className="[&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
                   />
                </div>
 
