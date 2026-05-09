@@ -26,7 +26,8 @@ import {
   Maximize, Minimize, Settings, TrendingUp, ListPlus, Disc3, MicVocal,
   ArrowLeft, Palette, LayoutTemplate, CornerUpRight, Type, Star, 
   ChevronLeft, ChevronRight, ListFilter, AlignLeft, ArrowDownUp, EyeOff, Trash2, Rows3, Maximize2, Activity, Speaker,
-  Wind, Droplets, Timer, Gauge, SlidersHorizontal, Scissors, GitMerge, CircleStop, Wifi, Ghost
+  Wind, Droplets, Timer, Gauge, SlidersHorizontal, Scissors, GitMerge, CircleStop, Wifi, Ghost,
+  CloudDownload, PaintBucket
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -62,6 +63,8 @@ const Repeat1 = ({ className }: { className?: string }) => <MaterialIcon name="r
 const VolumeX = ({ className }: { className?: string }) => <MaterialIcon name="volume_off" className={className} />
 const Volume1 = ({ className }: { className?: string }) => <MaterialIcon name="volume_down" className={className} />
 const Volume2 = ({ className }: { className?: string }) => <MaterialIcon name="volume_up" className={className} />
+const ShareIcon = ({ className }: { className?: string }) => <MaterialIcon name="ios_share" className={className} />
+const MoreIcon = ({ className }: { className?: string }) => <MaterialIcon name="more_horiz" className={className} />
 
 const firebaseConfig = {
   apiKey: "AIzaSyBI-ABs1S7Ln2jJ7xYxgUZwU1nEXZmqI2c",
@@ -81,6 +84,16 @@ interface Song { videoId: string; title: string; artist: string; artistId?: stri
 interface Playlist { id: string; name: string; songs: Song[]; }
 interface LyricLine { time: number; text: string; }
 interface LyricsData { syncedLyrics: LyricLine[] | null; plainLyrics: string | null; }
+
+const COLOR_THEMES =[
+  { id: 'default', name: 'Default', primary: '', secondary: '#64748b' },
+  { id: 'teal', name: 'Teal Wave', primary: '#14b8a6', secondary: '#0f766e' },
+  { id: 'green', name: 'Green Apple', primary: '#22c55e', secondary: '#15803d' },
+  { id: 'blue', name: 'Ocean', primary: '#3b82f6', secondary: '#1d4ed8' },
+  { id: 'purple', name: 'Amethyst', primary: '#a855f7', secondary: '#7e22ce' },
+  { id: 'rose', name: 'Rose', primary: '#f43f5e', secondary: '#be123c' },
+  { id: 'orange', name: 'Sunset', primary: '#f97316', secondary: '#c2410c' },
+];
 
 const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactNode, title?: string, icon?: any }) => {
   const rowRef = useRef<HTMLDivElement>(null)
@@ -148,8 +161,12 @@ export function AudioPlayer() {
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
   const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
+  const[showColorPalette, setShowColorPalette] = useState(false)
   const[newPlaylistName, setNewPlaylistName] = useState("")
   
+  const[colorTheme, setColorTheme] = useState('default')
+  const[playerStyle, setPlayerStyle] = useState<'Classic' | 'Open' | 'Modern' | 'Minimal' | 'Cinematic' | 'Expressive' | 'Immersive'>('Classic')
+
   const[dynamicTheme, setDynamicTheme] = useState(true)
   const[playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
   const[thumbnailRadius, setThumbnailRadius] = useState(32)
@@ -305,6 +322,10 @@ export function AudioPlayer() {
       if (savedQuality) setAudioQuality(savedQuality as 'High' | 'Standard' | 'Low')
       const savedAlignment = localStorage.getItem('ganvo_lyrics_alignment')
       if (savedAlignment) setLyricsAlignment(savedAlignment as 'Left' | 'Center' | 'Right')
+      const savedTheme = localStorage.getItem('ganvo_color_theme')
+      if (savedTheme) setColorTheme(savedTheme)
+      const savedPlayerStyle = localStorage.getItem('ganvo_player_style')
+      if (savedPlayerStyle) setPlayerStyle(savedPlayerStyle as any)
 
       loadBoolSetting('ganvo_autoplay_similar', setAutoPlaySimilar)
       loadBoolSetting('ganvo_auto_scroll_lyrics', setAutoScrollLyrics)
@@ -851,10 +872,282 @@ export function AudioPlayer() {
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2
   const showSearchDropdown = searchFocused && (searchResults.length > 0 || isSearching || (searchQuery.trim() === "" && searchHistory.length > 0))
 
+  // MOBILE PLAYER RENDERING STRATEGIES
+  const renderClassicPlayer = () => (
+    <div className="flex flex-col items-center min-h-full py-4 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
+      <div className="w-full max-w-[360px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center" style={{ borderRadius: `${thumbnailRadius}px` }}>
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out absolute inset-0", isPlaying ? "scale-105" : "scale-100")} />
+      </div>
+      <div className="w-full flex items-center justify-between gap-4 mb-6 px-4">
+         <div className="flex-1 min-w-0 text-left">
+            <h2 className="text-3xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
+            <p className="text-lg font-semibold text-muted-foreground truncate">{currentSong.artist}</p>
+         </div>
+         <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-14 w-14 flex-shrink-0 p-0 rounded-full text-foreground hover:bg-primary/10 outline-none focus:outline-none">
+            <Heart className={cn("h-8 w-8 transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
+         </Button>
+      </div>
+      <div className="w-full mb-8 px-4">
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
+        <div className="flex justify-between text-sm font-bold text-muted-foreground">
+          <span>{formatTime(currentTime)}</span>
+          <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between w-full mb-8 px-6">
+        <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 p-0 rounded-full flex items-center justify-center outline-none focus:outline-none", shuffle ? "bg-primary/20 text-primary" : "text-foreground")}><Shuffle className="text-[24px]" /></Button>
+        <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 p-0 rounded-full text-foreground flex items-center justify-center outline-none focus:outline-none"><SkipBack className="text-[32px]" /></Button>
+        <Button size="icon" onClick={togglePlay} className="h-20 w-20 p-0 rounded-[2rem] bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform active:scale-95 flex items-center justify-center outline-none focus:outline-none">
+           {isPlaying ? <Pause className="text-[40px] text-primary-foreground" /> : <Play className="text-[40px] text-primary-foreground translate-x-[2px]" />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 p-0 rounded-full text-foreground flex items-center justify-center outline-none focus:outline-none"><SkipForward className="text-[32px]" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 p-0 rounded-full flex items-center justify-center outline-none focus:outline-none", repeatMode !== "off" ? "bg-primary/20 text-primary" : "text-foreground")}>
+          {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderOpenPlayer = () => (
+    <div className="flex flex-col items-center min-h-full py-2 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
+      <div className="text-center mb-6 mt-2 px-4">
+        <p className="text-sm font-bold text-foreground">Now Playing</p>
+        <p className="text-sm text-muted-foreground truncate max-w-full">{currentSong.album || `${currentSong.artist} Mix`}</p>
+      </div>
+      <div className="w-full max-w-[380px] aspect-square mx-auto overflow-hidden shadow-sm relative shrink-0 flex items-center justify-center rounded-[2rem] px-4">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out rounded-[2rem]", isPlaying ? "scale-105" : "scale-100")} />
+      </div>
+      <div className="w-full flex items-center justify-between gap-4 mt-8 mb-6 px-6">
+         <div className="flex-1 min-w-0 text-left pr-4">
+            <h2 className="text-2xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
+            <p className="text-base font-semibold text-muted-foreground truncate">{currentSong.artist}</p>
+         </div>
+         <div className="flex items-center gap-1 flex-shrink-0">
+           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full"><ShareIcon className="text-[24px]"/></Button>
+           <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-12 w-12 rounded-full">
+              <Heart className={cn("text-[24px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
+           </Button>
+           <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full"><MoreIcon className="text-[24px]"/></Button>
+         </div>
+      </div>
+      <div className="w-full mb-8 px-6">
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-3[&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1" />
+        <div className="flex justify-between text-xs font-bold text-muted-foreground">
+          <span>{formatTime(currentTime)}</span>
+          <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between w-full mb-auto px-6">
+        <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 p-0 rounded-full", shuffle ? "text-primary" : "text-muted-foreground")}><Shuffle className="text-[24px]" /></Button>
+        <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 p-0 rounded-full text-foreground"><SkipBack className="text-[32px]" /></Button>
+        <Button size="icon" onClick={togglePlay} className="h-20 w-20 p-0 rounded-full bg-foreground text-background shadow-xl hover:scale-105 transition-transform active:scale-95">
+           {isPlaying ? <Pause className="text-[32px] text-background" /> : <Play className="text-[32px] text-background" />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 p-0 rounded-full text-foreground"><SkipForward className="text-[32px]" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 p-0 rounded-full", repeatMode !== "off" ? "text-primary" : "text-muted-foreground")}>
+          {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
+        </Button>
+      </div>
+      <div className="flex w-full gap-4 mt-6 mb-2 px-4">
+         <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('queue')}><ListMusic className="mr-2 h-5 w-5"/> Queue</Button>
+         <Button variant="secondary" size="icon" className="w-14 h-14 shrink-0 rounded-2xl bg-muted/60" onClick={() => setIsDark(!isDark)}><Moon className="h-5 w-5"/></Button>
+         <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('lyrics')}><AlignLeft className="mr-2 h-5 w-5"/> Lyrics</Button>
+      </div>
+    </div>
+  )
+
+  const renderModernPlayer = () => (
+    <div className="flex flex-col items-center min-h-full py-2 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
+      <div className="text-center mb-6 mt-2 px-4">
+        <p className="text-sm font-bold text-foreground">Now Playing</p>
+        <p className="text-sm text-muted-foreground truncate max-w-full">{currentSong.album || `${currentSong.artist} Mix`}</p>
+      </div>
+      <div className="w-full max-w-[380px] aspect-square mx-auto overflow-hidden shadow-sm relative shrink-0 flex items-center justify-center rounded-3xl px-4">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out rounded-3xl", isPlaying ? "scale-105" : "scale-100")} />
+      </div>
+      <div className="w-full flex items-center justify-between gap-4 mt-8 mb-6 px-6">
+         <div className="flex-1 min-w-0 text-left pr-4">
+            <h2 className="text-2xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
+            <p className="text-base font-semibold text-muted-foreground truncate">{currentSong.artist}</p>
+         </div>
+         <div className="flex items-center gap-1 flex-shrink-0">
+           <Button variant="secondary" size="icon" className="h-12 w-12 rounded-full bg-muted/50"><ShareIcon className="text-[20px]"/></Button>
+           <Button variant="secondary" size="icon" onClick={() => toggleLike(currentSong)} className="h-12 w-12 rounded-full bg-muted/50">
+              <Heart className={cn("text-[20px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
+           </Button>
+           <Button variant="secondary" size="icon" className="h-12 w-12 rounded-full bg-muted/50"><MoreIcon className="text-[20px]"/></Button>
+         </div>
+      </div>
+      <div className="w-full mb-6 px-6">
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-3 [&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-muted" />
+        <div className="flex justify-between text-xs font-bold text-muted-foreground">
+          <span>{formatTime(currentTime)}</span>
+          <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
+        </div>
+      </div>
+      
+      {/* Modern Control Pill */}
+      <div className="flex items-center gap-2 bg-primary/10 dark:bg-primary/20 rounded-[2.5rem] p-2 mx-6 w-[calc(100%-3rem)]">
+         <Button variant="ghost" onClick={playPrevious} className="flex-1 h-16 rounded-[2rem] text-primary"><SkipBack className="text-[28px]"/></Button>
+         <Button onClick={togglePlay} className="h-20 w-24 shrink-0 rounded-[2rem] bg-foreground text-background shadow-xl hover:scale-105 transition-transform active:scale-95">
+            {isPlaying ? <Pause className="text-[32px] text-background" /> : <Play className="text-[32px] text-background" />}
+         </Button>
+         <Button variant="ghost" onClick={playNext} className="flex-1 h-16 rounded-[2rem] text-primary"><SkipForward className="text-[28px]"/></Button>
+      </div>
+      
+      <div className="flex justify-center gap-8 mt-6 mb-auto w-full">
+         <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 rounded-full bg-muted/30", shuffle ? "text-primary bg-primary/10" : "text-muted-foreground")}><Shuffle className="text-[20px]" /></Button>
+         <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 rounded-full bg-muted/30", repeatMode !== "off" ? "text-primary bg-primary/10" : "text-muted-foreground")}>
+           {repeatMode === "one" ? <Repeat1 className="text-[20px]" /> : <Repeat className="text-[20px]" />}
+         </Button>
+      </div>
+
+      <div className="flex w-full gap-4 mt-6 mb-2 px-4">
+         <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('queue')}><ListMusic className="mr-2 h-5 w-5"/> Queue</Button>
+         <Button variant="secondary" size="icon" className="w-14 h-14 shrink-0 rounded-2xl bg-muted/60" onClick={() => setIsDark(!isDark)}><Moon className="h-5 w-5"/></Button>
+         <Button variant="secondary" className="flex-1 rounded-2xl h-14 bg-muted/60 font-bold" onClick={() => setMobilePlayerTab('lyrics')}><AlignLeft className="mr-2 h-5 w-5"/> Lyrics</Button>
+      </div>
+    </div>
+  )
+
+  const renderMinimalPlayer = () => (
+    <div className="flex flex-col items-center justify-center min-h-full py-12 w-full max-w-[480px] animate-in fade-in duration-500 relative m-auto px-8">
+      <div className="w-full aspect-square mx-auto overflow-hidden relative shrink-0 mb-12 flex items-center justify-center rounded-sm">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-all duration-[3s] ease-out", isPlaying ? "scale-105 opacity-100" : "scale-100 opacity-90")} />
+      </div>
+      <div className="w-full text-center mb-10">
+        <h2 className="text-xl font-medium truncate text-foreground">{currentSong.title}</h2>
+        <p className="text-sm font-normal text-muted-foreground/60 truncate mt-1">{currentSong.artist}</p>
+      </div>
+      <div className="w-full mb-12">
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:hidden [&_[data-slot=track]]:h-[1px] [&_[data-slot=track]]:bg-muted-foreground/20" />
+      </div>
+      <div className="flex items-center justify-center gap-12 w-full">
+        <Button variant="ghost" size="icon" onClick={playPrevious} className="h-10 w-10 text-muted-foreground/50 hover:text-foreground"><SkipBack className="text-[20px] font-light" /></Button>
+        <Button variant="ghost" size="icon" onClick={togglePlay} className="h-14 w-14 text-foreground">
+           {isPlaying ? <Pause className="text-[32px] font-light" /> : <Play className="text-[32px] font-light" />}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={playNext} className="h-10 w-10 text-muted-foreground/50 hover:text-foreground"><SkipForward className="text-[20px] font-light" /></Button>
+      </div>
+    </div>
+  )
+
+  const renderCinematicPlayer = () => (
+    <div className="absolute inset-0 flex flex-col items-center justify-end w-full animate-in fade-in duration-1000 z-50">
+      <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
+        <img src={currentSong.thumbnail} className={cn("w-full h-[70vh] object-cover opacity-80 blur-sm scale-110", isPlaying && "animate-pulse")} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+      </div>
+      <div className="w-full px-6 pb-12 pt-32 max-w-[480px]">
+        <div className="mb-6 flex justify-between items-end">
+          <div className="flex-1 min-w-0 pr-4">
+            <h2 className="text-4xl font-black text-white truncate drop-shadow-lg">{currentSong.title}</h2>
+            <p className="text-lg font-bold text-white/70 truncate mt-1">{currentSong.artist}</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/70 hover:text-white">
+             <Heart className={cn("text-[28px] drop-shadow-md", likedSongs.has(currentSong.videoId) ? "fill-white text-white scale-110" : "")} />
+          </Button>
+        </div>
+        <div className="w-full mb-8">
+          <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-white [&_[data-slot=thumb]]:bg-white [&_[data-slot=thumb]]:h-3 [&_[data-slot=thumb]]:w-3 [&_[data-slot=track]]:h-1 [&_[data-slot=track]]:bg-white/20" />
+          <div className="flex justify-between text-xs font-bold text-white/50 mt-3">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between w-full">
+          <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("text-white/50", shuffle && "text-white")}><Shuffle className="text-[24px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={playPrevious} className="text-white"><SkipBack className="text-[36px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-20 w-20 text-white">
+             {isPlaying ? <Pause className="text-[56px] drop-shadow-2xl" /> : <Play className="text-[56px] drop-shadow-2xl" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={playNext} className="text-white"><SkipForward className="text-[36px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("text-white/50", repeatMode !== "off" && "text-white")}><Repeat className="text-[24px]" /></Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderExpressivePlayer = () => (
+    <div className="flex flex-col items-center min-h-full py-8 w-full max-w-[480px] animate-in slide-in-from-bottom-8 duration-700 relative m-auto px-6">
+      <div className={cn("w-64 h-64 mx-auto overflow-hidden shadow-[0_0_80px_rgba(var(--primary),0.5)] relative mb-12 shrink-0 flex items-center justify-center rounded-full border-4 border-background transition-transform duration-1000", isPlaying ? "rotate-180 scale-105" : "")}>
+         <img src={currentSong.thumbnail} className="w-full h-full object-cover" />
+         <div className="absolute inset-0 border-[6px] border-primary/20 rounded-full pointer-events-none" />
+         <div className="absolute w-12 h-12 bg-background rounded-full border-4 border-primary/20 shadow-inner z-10" />
+      </div>
+      <div className="w-full text-center mb-8 px-4 bg-card/40 backdrop-blur-3xl py-6 rounded-[2rem] border border-white/10 shadow-xl">
+         <h2 className="text-2xl font-black truncate text-foreground mb-1 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{currentSong.title}</h2>
+         <p className="text-sm font-bold text-muted-foreground truncate uppercase tracking-widest">{currentSong.artist}</p>
+         
+         <div className="w-full mt-8 mb-6">
+            <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="[&_[data-slot=range]]:bg-gradient-to-r [&_[data-slot=range]]:from-primary [&_[data-slot=range]]:to-secondary [&_[data-slot=thumb]]:h-6 [&_[data-slot=thumb]]:w-6 [&_[data-slot=thumb]]:border-4 [&_[data-slot=thumb]]:border-primary [&_[data-slot=track]]:h-3 [&_[data-slot=track]]:bg-muted rounded-full" />
+         </div>
+
+         <div className="flex items-center justify-center gap-6 w-full">
+            <Button variant="ghost" size="icon" onClick={playPrevious} className="h-14 w-14 rounded-full bg-background shadow-md text-primary"><SkipBack className="text-[28px]" /></Button>
+            <Button onClick={togglePlay} className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-2xl hover:scale-110 transition-transform">
+               {isPlaying ? <Pause className="text-[36px]" /> : <Play className="text-[36px]" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={playNext} className="h-14 w-14 rounded-full bg-background shadow-md text-primary"><SkipForward className="text-[28px]" /></Button>
+         </div>
+      </div>
+    </div>
+  )
+
+  const renderImmersivePlayer = () => (
+    <div className="absolute inset-0 flex flex-col items-center justify-center w-full animate-in fade-in duration-1000 z-50 overflow-hidden">
+      <div className="w-[85vw] max-w-[400px] aspect-square overflow-hidden rounded-[3rem] shadow-[0_30px_60px_rgba(0,0,0,0.5)] z-10 mb-12">
+         <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[3s] ease-out", isPlaying && "scale-110")} />
+      </div>
+      <div className="w-full max-w-[400px] bg-black/20 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 z-10 text-white shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex-1 min-w-0 pr-4">
+            <h2 className="text-2xl font-bold truncate">{currentSong.title}</h2>
+            <p className="text-sm font-medium text-white/60 truncate mt-1">{currentSong.artist}</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/60 hover:text-white">
+             <Heart className={cn("text-[24px]", likedSongs.has(currentSong.videoId) ? "fill-white text-white" : "")} />
+          </Button>
+        </div>
+        <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-6 [&_[data-slot=range]]:bg-white[&_[data-slot=thumb]]:bg-white [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-white/20" />
+        <div className="flex items-center justify-between w-full px-2">
+          <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("text-white/40 hover:text-white", shuffle && "text-white")}><Shuffle className="text-[20px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={playPrevious} className="text-white hover:bg-white/10"><SkipBack className="text-[32px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={togglePlay} className="h-16 w-16 text-white hover:bg-white/10 bg-white/5 rounded-full">
+             {isPlaying ? <Pause className="text-[40px]" /> : <Play className="text-[40px]" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={playNext} className="text-white hover:bg-white/10"><SkipForward className="text-[32px]" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("text-white/40 hover:text-white", repeatMode !== "off" && "text-white")}><Repeat className="text-[20px]" /></Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderMobilePlayerContent = () => {
+    switch(playerStyle) {
+      case 'Open': return renderOpenPlayer();
+      case 'Modern': return renderModernPlayer();
+      case 'Minimal': return renderMinimalPlayer();
+      case 'Cinematic': return renderCinematicPlayer();
+      case 'Expressive': return renderExpressivePlayer();
+      case 'Immersive': return renderImmersivePlayer();
+      default: return renderClassicPlayer();
+    }
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden font-sans relative z-0 bg-background transition-colors duration-1000">
       
-      {/* Global Setting Overrides */}
+      {/* Global CSS Injections for Themes and Settings */}
+      {colorTheme !== 'default' && COLOR_THEMES.find(t => t.id === colorTheme) && (
+        <style dangerouslySetInnerHTML={{__html: `
+          :root, .dark {
+            --primary: ${COLOR_THEMES.find(t => t.id === colorTheme)?.primary};
+            --ring: ${COLOR_THEMES.find(t => t.id === colorTheme)?.primary};
+          }
+        `}} />
+      )}
+
       {disableAnimations && (
         <style dangerouslySetInnerHTML={{__html: `
           *, *::before, *::after {
@@ -864,6 +1157,7 @@ export function AudioPlayer() {
           }
         `}} />
       )}
+
       {disableBlur && (
         <style dangerouslySetInnerHTML={{__html: `
           * {
@@ -1371,100 +1665,7 @@ export function AudioPlayer() {
                 </div>
               )}
               {currentSong ? (
-                <div className="flex w-full max-w-[480px] flex-col items-center animate-in fade-in zoom-in-95 duration-700 ease-out m-auto">
-                  
-                  <div
-                    className={cn(
-                      "aspect-square w-full max-w-[320px] mx-auto overflow-hidden relative transition-all duration-700 ease-out shadow-2xl mb-8",
-                      dynamicTheme ? "rounded-[2rem]" : "rounded-2xl",
-                      isPlaying && !reduceMotion && "scale-[1.02] shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
-                    )}
-                    style={{ borderRadius: `${thumbnailRadius}px` }}
-                  >
-                    <img
-                      src={currentSong.thumbnail || "/placeholder.svg"}
-                      alt={currentSong.title}
-                      className={cn("h-full w-full object-cover", !reduceMotion && "transition-transform duration-[2s] ease-out", isPlaying && !reduceMotion ? "scale-105" : "scale-100")}
-                    />
-                  </div>
-
-                  <div className="mb-6 flex w-full items-center px-2">
-                    {/* Invisible spacer to perfectly center the text while keeping the heart button on the right */}
-                    <div className="w-12 h-12 flex-shrink-0" />
-                    <div className="flex-1 min-w-0 text-center px-4">
-                      <h2 className="mb-1 truncate text-2xl font-extrabold tracking-tight sm:text-3xl text-foreground transition-colors">{currentSong.title}</h2>
-                      <button 
-                        onClick={() => currentSong.artistId && loadArtistView(currentSong.artistId)}
-                        className="truncate max-w-full text-base font-semibold text-muted-foreground/80 hover:text-primary hover:underline transition-colors outline-none focus:outline-none"
-                      >
-                        {currentSong.artist}
-                      </button>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleLike(currentSong)}
-                      className={cn("h-12 w-12 flex-shrink-0 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-muted active:scale-75 text-foreground outline-none focus:outline-none", likedSongs.has(currentSong.videoId) && "text-[var(--google-red)] hover:text-[var(--google-red)] hover:bg-[var(--google-red)]/10")}
-                    >
-                      <Heart className={cn("h-6 w-6 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]", likedSongs.has(currentSong.videoId) && "fill-current text-current scale-110 drop-shadow-md")} />
-                    </Button>
-                  </div>
-
-                  {showPlaybackSpeed && (
-                    <div className="flex w-full items-center justify-between px-4 mb-2">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Gauge className="w-4 h-4"/> Speed</span>
-                      <Select value={playbackRate.toString()} onValueChange={(v: any) => setPlaybackRate(parseFloat(v))}>
-                        <SelectTrigger className="w-[80px] h-8 rounded-full border-none bg-muted/50 text-xs font-bold focus:ring-0 outline-none">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-2xl z-[500]">
-                          <SelectItem value="0.5" className="text-xs font-bold py-2">0.5x</SelectItem>
-                          <SelectItem value="0.75" className="text-xs font-bold py-2">0.75x</SelectItem>
-                          <SelectItem value="1" className="text-xs font-bold py-2">1x</SelectItem>
-                          <SelectItem value="1.25" className="text-xs font-bold py-2">1.25x</SelectItem>
-                          <SelectItem value="1.5" className="text-xs font-bold py-2">1.5x</SelectItem>
-                          <SelectItem value="2" className="text-xs font-bold py-2">2x</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div className="mb-8 w-full px-2 transition-all duration-500">
-                    <Slider
-                      value={[currentTime]}
-                      max={duration || 100}
-                      step={0.1}
-                      onValueChange={handleSeek}
-                      className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4[&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
-                    />
-                    <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-8 flex items-center justify-center gap-4 sm:gap-6 w-full">
-                    <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 p-0 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center outline-none focus:outline-none", shuffle ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><Shuffle className="text-[24px]" /></Button>
-                    <Button variant="ghost" size="icon" onClick={playPrevious} className="h-14 w-14 p-0 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center text-foreground outline-none focus:outline-none"><SkipBack className="text-[28px]" /></Button>
-                    <Button size="icon" onClick={togglePlay} disabled={isLoading} className={cn("h-16 w-16 sm:h-20 sm:w-20 p-0 rounded-[2rem] bg-primary text-primary-foreground shadow-xl active:scale-90 flex items-center justify-center outline-none focus:outline-none", !reduceMotion && "transition-all duration-400 ease-out hover:scale-110", isPlaying && !reduceMotion && "scale-105 rounded-[1.5rem]")}>
-                      {isLoading ? <Loader2 className="h-7 w-7 animate-spin text-current" /> : isPlaying ? <Pause className="text-[32px] sm:text-[40px] text-current" /> : <Play className="text-[32px] sm:text-[40px] text-current translate-x-[2px]" />}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={playNext} className="h-14 w-14 p-0 rounded-full transition-all duration-300 hover:bg-muted active:scale-75 flex items-center justify-center text-foreground outline-none focus:outline-none"><SkipForward className="text-[28px]" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 p-0 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center outline-none focus:outline-none", repeatMode !== "off" ? "bg-primary/20 text-primary" : "text-foreground")}>
-                      {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
-                    </Button>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between gap-3 px-2">
-                    <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
-                      <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground outline-none focus:outline-none"><VolumeIcon className="text-[20px] text-current" /></Button>
-                      <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10" />
-                      <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="h-40 shrink-0 lg:hidden w-full opacity-0 pointer-events-none" />
-                </div>
+                renderMobilePlayerContent()
               ) : (
                 <div className="flex flex-col items-center px-4 text-center animate-in fade-in zoom-in-95 duration-700 ease-out m-auto">
                   <div className={cn("mb-8 flex h-40 w-40 items-center justify-center rounded-[2.5rem] bg-muted/50 shadow-inner", !reduceMotion && "transition-all duration-700 hover:scale-105")}>
@@ -1647,7 +1848,7 @@ export function AudioPlayer() {
             <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-[1.25rem] shadow-sm">
               <img src={currentSong.thumbnail || "/placeholder.svg"} className={cn("aspect-square w-full h-full object-cover transition-transform duration-700 ease-out", isPlaying ? "scale-110" : "scale-100")} />
             </div>
-            <div className="flex-1 overflow-hidden flex flex-col justify-center px-1">
+            <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center px-1">
               <p className="truncate text-sm font-extrabold leading-tight transition-colors text-foreground">{currentSong.title}</p>
               <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5 transition-colors">{currentSong.artist}</p>
             </div>
@@ -1705,6 +1906,7 @@ export function AudioPlayer() {
           </div>
         )}
 
+        {/* Mobile App Header Bar */}
         <div className="flex items-center justify-between p-4 mt-2 relative z-50">
           <Button variant="ghost" size="icon" onClick={() => setIsMobilePlayerExpanded(false)} className="h-12 w-12 rounded-full hover:bg-muted active:scale-90 text-foreground outline-none focus:outline-none">
             <ChevronDown className="h-8 w-8 text-current" />
@@ -1734,66 +1936,14 @@ export function AudioPlayer() {
           {/* PLAYER TAB */}
           <div className={cn(
             "absolute inset-0 flex flex-col z-10 transition-opacity duration-300", 
-            mobilePlayerTab === 'player' ? "opacity-100 pointer-events-auto overflow-y-auto px-6 pb-6 no-scrollbar" : "opacity-0 pointer-events-none overflow-hidden"
+            mobilePlayerTab === 'player' ? "opacity-100 pointer-events-auto overflow-y-auto no-scrollbar" : "opacity-0 pointer-events-none overflow-hidden"
           )}>
-            {currentSong && (
-              <div className="flex flex-col items-center min-h-full py-4 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
-                {loadError && (
-                  <div className="absolute top-0 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-lg z-50 animate-in fade-in slide-in-from-top-4 text-center">
-                    {loadError}
-                  </div>
-                )}
-                {/* Responsive Square Album Art */}
-                <div 
-                  className="w-full max-w-[360px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center"
-                  style={{ borderRadius: `${thumbnailRadius}px` }}
-                >
-                   <img src={currentSong.thumbnail} className={cn("w-full h-full object-cover transition-transform duration-[2s] ease-out absolute inset-0", isPlaying ? "scale-105" : "scale-100")} />
-                   {isLoading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-md z-10">
-                        <Loader2 className="h-12 w-12 animate-spin text-white mb-2" />
-                      </div>
-                    )}
-                </div>
-                
-                <div className="w-full flex items-center justify-between gap-4 mb-6">
-                   <div className="flex-1 min-w-0 text-left">
-                      <h2 className="text-3xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
-                      <p className="text-lg font-semibold text-muted-foreground truncate">{currentSong.artist}</p>
-                   </div>
-                   <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-14 w-14 flex-shrink-0 p-0 rounded-full text-foreground hover:bg-[var(--google-red)]/10 outline-none focus:outline-none">
-                      <Heart className={cn("h-8 w-8 transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--google-red)] text-[var(--google-red)] scale-110" : "text-current")} />
-                   </Button>
-                </div>
-
-                <div className="w-full mb-8">
-                  <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
-                  <div className="flex justify-between text-sm font-bold text-muted-foreground">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between w-full mb-8 px-2">
-                  <Button variant="ghost" size="icon" onClick={() => setShuffle(!shuffle)} className={cn("h-12 w-12 p-0 rounded-full flex items-center justify-center outline-none focus:outline-none", shuffle ? "bg-primary/20 text-primary" : "text-foreground")}><Shuffle className="text-[24px]" /></Button>
-                  <Button variant="ghost" size="icon" onClick={playPrevious} className="h-16 w-16 p-0 rounded-full text-foreground flex items-center justify-center outline-none focus:outline-none"><SkipBack className="text-[32px]" /></Button>
-                  <Button size="icon" onClick={togglePlay} className="h-20 w-20 p-0 rounded-[2rem] bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform active:scale-95 flex items-center justify-center outline-none focus:outline-none">
-                     {isPlaying ? <Pause className="text-[40px] text-primary-foreground" /> : <Play className="text-[40px] text-primary-foreground translate-x-[2px]" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={playNext} className="h-16 w-16 p-0 rounded-full text-foreground flex items-center justify-center outline-none focus:outline-none"><SkipForward className="text-[32px]" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")} className={cn("h-12 w-12 p-0 rounded-full flex items-center justify-center outline-none focus:outline-none", repeatMode !== "off" ? "bg-primary/20 text-primary" : "text-foreground")}>
-                    {repeatMode === "one" ? <Repeat1 className="text-[24px]" /> : <Repeat className="text-[24px]" />}
-                  </Button>
-                </div>
-
-                <div className="flex w-full items-center justify-between gap-3 px-2 pb-12">
-                  <div className="flex flex-1 items-center gap-3 rounded-2xl bg-muted/60 backdrop-blur-sm px-4 py-3 transition-all duration-300 hover:bg-muted/80">
-                    <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8 flex-shrink-0 rounded-full p-0 transition-transform duration-300 hover:scale-110 active:scale-90 flex items-center justify-center text-foreground outline-none focus:outline-none"><VolumeIcon className="text-[20px]" /></Button>
-                    <Slider value={[isMuted ? 0 : volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-foreground [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4 [&_[data-slot=track]]:h-1.5 [&_[data-slot=track]]:bg-foreground/10" />
-                    <span className="w-8 flex-shrink-0 text-right text-xs font-bold tabular-nums text-muted-foreground">{isMuted ? 0 : volume}%</span>
-                  </div>
-                </div>
-
+            {currentSong ? (
+               renderMobilePlayerContent()
+            ) : (
+              <div className="flex flex-col items-center px-4 py-20 text-center">
+                 <div className="mb-8 flex h-40 w-40 items-center justify-center rounded-[2.5rem] bg-muted/50 shadow-inner"><Music2 className="h-20 w-20 text-muted-foreground/40" /></div>
+                 <h2 className="mb-3 text-3xl font-extrabold text-foreground">Start Listening</h2>
               </div>
             )}
           </div>
@@ -1865,6 +2015,70 @@ export function AudioPlayer() {
 
       {/* --- ALL DIALOGS (SETTINGS, EFFECTS, AUTH, PLAYLISTS, CREDITS) --- */}
       
+      <Dialog open={showColorPalette} onOpenChange={setShowColorPalette}>
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[500]">
+          <div className="flex items-center gap-4 p-5">
+            <Button variant="ghost" size="icon" onClick={() => setShowColorPalette(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
+            <h2 className="text-xl font-bold text-foreground">Color Palette</h2>
+          </div>
+          <div className="px-6 pb-6">
+            
+            {/* Preview Card */}
+            <div className="w-full h-56 rounded-3xl relative overflow-hidden shadow-xl mb-8 flex flex-col justify-end p-6 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#1e293b' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}>
+               <div className="absolute top-6 left-6 w-16 h-12 rounded-xl bg-white/20 backdrop-blur-sm" />
+               <div className="absolute top-[80px] left-6 w-32 h-1.5 rounded-full bg-white/30" />
+               <div className="absolute top-[80px] left-6 w-20 h-1.5 rounded-full bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+               
+               <div className="absolute top-6 right-6 w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }}>
+                  <Play className="text-[32px]" style={{ color: colorTheme === 'default' ? '#0f172a' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}/>
+               </div>
+
+               {/* Overlapping decorative circles */}
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+                  <div className="w-16 h-16 rounded-full transition-colors duration-500 shadow-md" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+                  <div className="w-12 h-12 rounded-full transition-colors duration-500 shadow-md -ml-6" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+                  <div className="w-8 h-8 rounded-full transition-colors duration-500 shadow-md -ml-4" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary }} />
+               </div>
+
+               {/* Bottom pill buttons */}
+               <div className="flex gap-3">
+                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+                  <div className="w-16 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white" /></div>
+               </div>
+               
+               {/* Label badge */}
+               <div className="absolute -bottom-2 -right-2 px-6 py-4 rounded-tl-2xl font-bold text-sm transition-colors duration-500 shadow-xl" style={{ backgroundColor: colorTheme === 'default' ? '#f8fafc' : COLOR_THEMES.find(t=>t.id===colorTheme)?.primary, color: colorTheme === 'default' ? '#0f172a' : COLOR_THEMES.find(t=>t.id===colorTheme)?.secondary }}>
+                  {COLOR_THEMES.find(t=>t.id===colorTheme)?.name}
+               </div>
+            </div>
+
+            {/* Swatch Carousel */}
+            <div className="flex overflow-x-auto gap-4 pb-6 px-2 no-scrollbar snap-x">
+               {COLOR_THEMES.map(theme => (
+                 <div key={theme.id} onClick={() => { setColorTheme(theme.id); localStorage.setItem('ganvo_color_theme', theme.id); }} className={cn("relative shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center cursor-pointer transition-all active:scale-95 snap-center", colorTheme === theme.id ? "border-[3px] scale-105" : "border-2 border-transparent opacity-80 hover:opacity-100 bg-muted/40")} style={{ borderColor: colorTheme === theme.id ? theme.primary : undefined }}>
+                   <div className="w-12 h-12 rounded-full overflow-hidden flex transform -rotate-45 shadow-sm">
+                      <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary || '#94a3b8' }} />
+                      <div className="w-1/2 h-full" style={{ backgroundColor: theme.secondary }} />
+                   </div>
+                   {colorTheme === theme.id && (
+                     <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
+                       <MaterialIcon name="check" className="text-[16px]" style={{ color: theme.primary }} />
+                     </div>
+                   )}
+                 </div>
+               ))}
+            </div>
+
+            <div className="flex flex-col gap-3 mt-4 items-end">
+               <Button className="rounded-2xl h-14 px-6 font-bold text-base bg-primary text-primary-foreground shadow-md hover:scale-105 transition-transform"><PaintBucket className="mr-3 w-5 h-5"/> Custom Theme</Button>
+               <Button variant="secondary" className="rounded-2xl h-14 px-6 font-bold text-base shadow-sm hover:scale-105 transition-transform"><CloudDownload className="mr-3 w-5 h-5"/> Import Theme</Button>
+            </div>
+            
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={showPlayerSettings} onOpenChange={setShowPlayerSettings}>
         <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[400]">
           <div className="flex items-center gap-4 p-5 border-b bg-card/50 backdrop-blur-sm">
@@ -1877,9 +2091,20 @@ export function AudioPlayer() {
              <div className="px-4 py-2 space-y-1">
                <h3 className="text-[13px] font-bold text-primary mb-4 ml-2">Appearance</h3>
                
-               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setShowColorPalette(true)}>
                  <div className="flex items-center gap-4">
                    <div className="p-2 bg-muted/80 rounded-full text-foreground"><Palette className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Theme colors</span>
+                     <span className="text-xs font-normal text-muted-foreground">{COLOR_THEMES.find(t=>t.id===colorTheme)?.name || 'Default'}</span>
+                   </div>
+                 </div>
+                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><LayoutTemplate className="w-5 h-5 text-current"/></div>
                    <div className="flex flex-col">
                      <span className="font-semibold text-base text-foreground">Dynamic theme</span>
                      <span className="text-xs font-normal text-muted-foreground">Extracts colors from the active album cover.</span>
@@ -1961,6 +2186,30 @@ export function AudioPlayer() {
                
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
                  <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Music2 className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-bold text-base text-foreground">Player style</span>
+                     <span className="text-xs font-normal text-muted-foreground">Main screen design.</span>
+                   </div>
+                 </div>
+                 <Select value={playerStyle} onValueChange={(v: any) => { setPlayerStyle(v); localStorage.setItem('ganvo_player_style', v); }}>
+                    <SelectTrigger className="w-[120px] rounded-xl font-bold bg-muted border-none text-foreground text-xs h-9 shrink-0 outline-none focus:ring-0">
+                      <SelectValue placeholder="Style" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl z-[500]">
+                      <SelectItem value="Classic" className="font-bold py-2 text-xs">Classic</SelectItem>
+                      <SelectItem value="Open" className="font-bold py-2 text-xs">Open</SelectItem>
+                      <SelectItem value="Modern" className="font-bold py-2 text-xs">Modern</SelectItem>
+                      <SelectItem value="Minimal" className="font-bold py-2 text-xs">Minimal</SelectItem>
+                      <SelectItem value="Cinematic" className="font-bold py-2 text-xs">Cinematic</SelectItem>
+                      <SelectItem value="Expressive" className="font-bold py-2 text-xs">Expressive</SelectItem>
+                      <SelectItem value="Immersive" className="font-bold py-2 text-xs">Immersive</SelectItem>
+                    </SelectContent>
+                  </Select>
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
                    <div className="p-2 bg-muted/80 rounded-full text-foreground"><LayoutTemplate className="w-5 h-5 text-current"/></div>
                    <div className="flex flex-col">
                      <span className="font-bold text-base text-foreground">Background style</span>
@@ -1991,7 +2240,7 @@ export function AudioPlayer() {
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
+                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5" 
                   />
                </div>
 
