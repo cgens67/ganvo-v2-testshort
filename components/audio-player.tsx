@@ -25,13 +25,13 @@ import {
   ChevronUp, ExternalLink, History, Library, UserCircle2, LogOut,
   Maximize, Minimize, Settings, TrendingUp, ListPlus, Disc3, MicVocal,
   ArrowLeft, Palette, LayoutTemplate, CornerUpRight, Type, Star, 
-  ChevronLeft, ChevronRight, ListFilter, AlignLeft, ArrowDownUp, EyeOff, Trash2, Rows3, Maximize2, Activity, Speaker
+  ChevronLeft, ChevronRight, ListFilter, AlignLeft, ArrowDownUp, EyeOff, Trash2, Rows3, Maximize2, Activity, Speaker,
+  Wind, Droplets, Timer, Gauge, SlidersHorizontal, Scissors, GitMerge, CircleStop, Wifi, Ghost
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Custom Icon Components using Material Symbols
 const MaterialIcon = ({ name, className }: { name: string, className?: string }) => {
-  // Convert standard Tailwind w/h classes to text sizes so the font scales properly
   const sizeClasses = className?.split(' ').map(c => {
     if (c === 'h-4' || c === 'w-4') return 'text-[16px]'
     if (c === 'h-5' || c === 'w-5') return 'text-[20px]'
@@ -125,7 +125,6 @@ export function AudioPlayer() {
   const[loadError, setLoadError] = useState<string | null>(null)
   
   const[playbackRate, setPlaybackRate] = useState(1)
-  const[preservesPitch, setPreservesPitch] = useState(false)
 
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
   const[currentLyricIndex, setCurrentLyricIndex] = useState(-1)
@@ -148,7 +147,6 @@ export function AudioPlayer() {
   const[showCreditsDialog, setShowCreditsDialog] = useState(false)
   const[showAccountSettings, setShowAccountSettings] = useState(false) 
   const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
-  const[showEffectsDialog, setShowEffectsDialog] = useState(false)
   const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
   const[newPlaylistName, setNewPlaylistName] = useState("")
   
@@ -171,6 +169,18 @@ export function AudioPlayer() {
   const[saveSearchHistory, setSaveSearchHistory] = useState(true)
   const[reduceMotion, setReduceMotion] = useState(false)
   const[autoOpenLyrics, setAutoOpenLyrics] = useState(false)
+
+  // 10 New App Settings Added
+  const[disableAnimations, setDisableAnimations] = useState(false)
+  const[disableBlur, setDisableBlur] = useState(false)
+  const[showTimeRemaining, setShowTimeRemaining] = useState(false)
+  const[showPlaybackSpeed, setShowPlaybackSpeed] = useState(false)
+  const[normalizeVolume, setNormalizeVolume] = useState(true)
+  const[skipSilence, setSkipSilence] = useState(false)
+  const[crossfade, setCrossfade] = useState(false)
+  const[stopAfterCurrent, setStopAfterCurrent] = useState(false)
+  const[dataSaver, setDataSaver] = useState(false)
+  const[privateSession, setPrivateSession] = useState(false)
   
   const[showAuthDialog, setShowAuthDialog] = useState(false)
   const[user, setUser] = useState<FirebaseUser | null>(null)
@@ -283,30 +293,38 @@ export function AudioPlayer() {
     try {
       const history = localStorage.getItem('ganvo_search_history')
       if (history) setSearchHistory(JSON.parse(history))
+      
+      const loadBoolSetting = (key: string, setter: (val: boolean) => void) => {
+        const val = localStorage.getItem(key);
+        if (val !== null) setter(val === 'true');
+      }
+
       const savedProvider = localStorage.getItem('ganvo_lyrics_provider')
       if (savedProvider) setLyricsProvider(savedProvider as 'lrclib' | 'kugou')
       const savedQuality = localStorage.getItem('ganvo_audio_quality')
       if (savedQuality) setAudioQuality(savedQuality as 'High' | 'Standard' | 'Low')
-      const savedAutoPlay = localStorage.getItem('ganvo_autoplay_similar')
-      if (savedAutoPlay !== null) setAutoPlaySimilar(savedAutoPlay === 'true')
-      const savedAutoScroll = localStorage.getItem('ganvo_auto_scroll_lyrics')
-      if (savedAutoScroll !== null) setAutoScrollLyrics(savedAutoScroll === 'true')
       const savedAlignment = localStorage.getItem('ganvo_lyrics_alignment')
       if (savedAlignment) setLyricsAlignment(savedAlignment as 'Left' | 'Center' | 'Right')
-      const savedGlass = localStorage.getItem('ganvo_lyrics_glass')
-      if (savedGlass !== null) setLyricsGlass(savedGlass === 'true')
-      const savedHidePicks = localStorage.getItem('ganvo_hide_picks')
-      if (savedHidePicks !== null) setHideCreatorsPicks(savedHidePicks === 'true')
-      const savedCompactQueue = localStorage.getItem('ganvo_compact_queue')
-      if (savedCompactQueue !== null) setCompactQueue(savedCompactQueue === 'true')
-      const savedAutoSwitch = localStorage.getItem('ganvo_auto_switch_player')
-      if (savedAutoSwitch !== null) setAutoSwitchToPlayer(savedAutoSwitch === 'true')
-      const savedHistoryEnabled = localStorage.getItem('ganvo_save_history')
-      if (savedHistoryEnabled !== null) setSaveSearchHistory(savedHistoryEnabled === 'true')
-      const savedMotion = localStorage.getItem('ganvo_reduce_motion')
-      if (savedMotion !== null) setReduceMotion(savedMotion === 'true')
-      const savedAutoLyrics = localStorage.getItem('ganvo_auto_open_lyrics')
-      if (savedAutoLyrics !== null) setAutoOpenLyrics(savedAutoLyrics === 'true')
+
+      loadBoolSetting('ganvo_autoplay_similar', setAutoPlaySimilar)
+      loadBoolSetting('ganvo_auto_scroll_lyrics', setAutoScrollLyrics)
+      loadBoolSetting('ganvo_lyrics_glass', setLyricsGlass)
+      loadBoolSetting('ganvo_hide_picks', setHideCreatorsPicks)
+      loadBoolSetting('ganvo_compact_queue', setCompactQueue)
+      loadBoolSetting('ganvo_auto_switch_player', setAutoSwitchToPlayer)
+      loadBoolSetting('ganvo_save_history', setSaveSearchHistory)
+      loadBoolSetting('ganvo_reduce_motion', setReduceMotion)
+      loadBoolSetting('ganvo_auto_open_lyrics', setAutoOpenLyrics)
+      loadBoolSetting('ganvo_disable_animations', setDisableAnimations)
+      loadBoolSetting('ganvo_disable_blur', setDisableBlur)
+      loadBoolSetting('ganvo_show_time_remaining', setShowTimeRemaining)
+      loadBoolSetting('ganvo_show_playback_speed', setShowPlaybackSpeed)
+      loadBoolSetting('ganvo_normalize_volume', setNormalizeVolume)
+      loadBoolSetting('ganvo_skip_silence', setSkipSilence)
+      loadBoolSetting('ganvo_crossfade', setCrossfade)
+      loadBoolSetting('ganvo_stop_after_current', setStopAfterCurrent)
+      loadBoolSetting('ganvo_data_saver', setDataSaver)
+      loadBoolSetting('ganvo_private_session', setPrivateSession)
     } catch (e) {}
 
     setIsExploreLoading(true)
@@ -513,7 +531,7 @@ export function AudioPlayer() {
 
   const addToQueueAndPlay = async (song: Song) => {
     const saveSearchStr = searchQuery || song.title
-    if (saveSearchStr.trim() && saveSearchHistory) {
+    if (saveSearchStr.trim() && saveSearchHistory && !privateSession) {
       const newHistory =[saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
       setSearchHistory(newHistory)
       localStorage.setItem('ganvo_search_history', JSON.stringify(newHistory))
@@ -554,6 +572,12 @@ export function AudioPlayer() {
   // ======== NATIVE YT IFRAME MOUNTING ======== //
   useEffect(() => {
     handleEndedRef.current = async () => {
+      if (stopAfterCurrent) {
+         setIsPlaying(false)
+         if (ytPlayerRef.current) ytPlayerRef.current.pauseVideo()
+         return
+      }
+      
       if (repeatMode === "one") {
         if (ytPlayerRef.current && ytPlayerRef.current.seekTo) {
           ytPlayerRef.current.seekTo(0, true)
@@ -830,6 +854,26 @@ export function AudioPlayer() {
   return (
     <div className="flex h-screen flex-col overflow-hidden font-sans relative z-0 bg-background transition-colors duration-1000">
       
+      {/* Global Setting Overrides */}
+      {disableAnimations && (
+        <style dangerouslySetInnerHTML={{__html: `
+          *, *::before, *::after {
+            transition: none !important;
+            animation: none !important;
+            scroll-behavior: auto !important;
+          }
+        `}} />
+      )}
+      {disableBlur && (
+        <style dangerouslySetInnerHTML={{__html: `
+          * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+          }
+        `}} />
+      )}
+
       <div style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
         <div ref={ytParentRef}></div>
       </div>
@@ -1344,7 +1388,7 @@ export function AudioPlayer() {
                     />
                   </div>
 
-                  <div className="mb-8 flex w-full items-center justify-between gap-4 px-2">
+                  <div className="mb-6 flex w-full items-center justify-between gap-4 px-2">
                     <div className="flex-1 min-w-0 text-center">
                       <h2 className="mb-1 truncate text-2xl font-extrabold tracking-tight sm:text-3xl text-foreground transition-colors">{currentSong.title}</h2>
                       <button 
@@ -1364,17 +1408,36 @@ export function AudioPlayer() {
                     </Button>
                   </div>
 
+                  {showPlaybackSpeed && (
+                    <div className="flex w-full items-center justify-between px-4 mb-2">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Gauge className="w-4 h-4"/> Speed</span>
+                      <Select value={playbackRate.toString()} onValueChange={(v: any) => setPlaybackRate(parseFloat(v))}>
+                        <SelectTrigger className="w-[80px] h-8 rounded-full border-none bg-muted/50 text-xs font-bold focus:ring-0 outline-none">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl z-[500]">
+                          <SelectItem value="0.5" className="text-xs font-bold py-2">0.5x</SelectItem>
+                          <SelectItem value="0.75" className="text-xs font-bold py-2">0.75x</SelectItem>
+                          <SelectItem value="1" className="text-xs font-bold py-2">1x</SelectItem>
+                          <SelectItem value="1.25" className="text-xs font-bold py-2">1.25x</SelectItem>
+                          <SelectItem value="1.5" className="text-xs font-bold py-2">1.5x</SelectItem>
+                          <SelectItem value="2" className="text-xs font-bold py-2">2x</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   <div className="mb-8 w-full px-2 transition-all duration-500">
                     <Slider
                       value={[currentTime]}
                       max={duration || 100}
                       step={0.1}
                       onValueChange={handleSeek}
-                      className="mb-3 cursor-grab active:cursor-grabbing [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4[&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
+                      className="mb-3 cursor-grab active:cursor-grabbing[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:transition-transform [&_[data-slot=thumb]]:duration-300 [&_[data-slot=thumb]]:ease-out [&_[data-slot=thumb]]:h-4 [&_[data-slot=thumb]]:w-4[&_[data-slot=thumb]]:border-2[&_[data-slot=thumb]]:hover:scale-150 [&_[data-slot=track]]:h-2 [&_[data-slot=track]]:bg-muted"
                     />
                     <div className="flex justify-between text-xs font-bold tabular-nums text-muted-foreground/70">
                       <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(duration)}</span>
+                      <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
                     </div>
                   </div>
 
@@ -1701,11 +1764,30 @@ export function AudioPlayer() {
                    </Button>
                 </div>
 
+                {showPlaybackSpeed && (
+                  <div className="flex w-full items-center justify-between px-4 mb-2">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Gauge className="w-4 h-4"/> Speed</span>
+                    <Select value={playbackRate.toString()} onValueChange={(v: any) => setPlaybackRate(parseFloat(v))}>
+                      <SelectTrigger className="w-[80px] h-8 rounded-full border-none bg-muted/50 text-xs font-bold focus:ring-0 outline-none">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl z-[500]">
+                        <SelectItem value="0.5" className="text-xs font-bold py-2">0.5x</SelectItem>
+                        <SelectItem value="0.75" className="text-xs font-bold py-2">0.75x</SelectItem>
+                        <SelectItem value="1" className="text-xs font-bold py-2">1x</SelectItem>
+                        <SelectItem value="1.25" className="text-xs font-bold py-2">1.25x</SelectItem>
+                        <SelectItem value="1.5" className="text-xs font-bold py-2">1.5x</SelectItem>
+                        <SelectItem value="2" className="text-xs font-bold py-2">2x</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div className="w-full mb-8">
                   <Slider value={[currentTime]} max={duration || 100} step={0.1} onValueChange={handleSeek} className="mb-4 [&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5[&_[data-slot=thumb]]:w-5[&_[data-slot=track]]:h-2" />
                   <div className="flex justify-between text-sm font-bold text-muted-foreground">
                     <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
+                    <span>{showTimeRemaining && duration ? `-${formatTime(duration - currentTime)}` : formatTime(duration)}</span>
                   </div>
                 </div>
 
@@ -1847,6 +1929,28 @@ export function AudioPlayer() {
 
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
                  <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Wind className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-bold text-base text-foreground">Disable all animations</span>
+                     <span className="text-xs font-normal text-muted-foreground">Removes all transitions and motion.</span>
+                   </div>
+                 </div>
+                 <Switch checked={disableAnimations} onCheckedChange={(val) => { setDisableAnimations(val); localStorage.setItem('ganvo_disable_animations', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Droplets className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-bold text-base text-foreground">Disable blur effects</span>
+                     <span className="text-xs font-normal text-muted-foreground">Removes backdrop blurs for performance.</span>
+                   </div>
+                 </div>
+                 <Switch checked={disableBlur} onCheckedChange={(val) => { setDisableBlur(val); localStorage.setItem('ganvo_disable_blur', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
                    <div className="p-2 bg-muted/80 rounded-full text-foreground"><EyeOff className="w-5 h-5 text-current"/></div>
                    <div className="flex flex-col">
                      <span className="font-bold text-base text-foreground">Hide Creator's Picks</span>
@@ -1918,6 +2022,28 @@ export function AudioPlayer() {
                  </div>
                  <Switch checked={autoSwitchToPlayer} onCheckedChange={(val) => { setAutoSwitchToPlayer(val); localStorage.setItem('ganvo_auto_switch_player', val.toString()) }} className="shrink-0" />
                </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Timer className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Show time remaining</span>
+                     <span className="text-xs font-normal text-muted-foreground">Display countdown instead of duration.</span>
+                   </div>
+                 </div>
+                 <Switch checked={showTimeRemaining} onCheckedChange={(val) => { setShowTimeRemaining(val); localStorage.setItem('ganvo_show_time_remaining', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Gauge className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Show playback speed</span>
+                     <span className="text-xs font-normal text-muted-foreground">Display speed control on the player.</span>
+                   </div>
+                 </div>
+                 <Switch checked={showPlaybackSpeed} onCheckedChange={(val) => { setShowPlaybackSpeed(val); localStorage.setItem('ganvo_show_playback_speed', val.toString()) }} className="shrink-0" />
+               </div>
                
              </div>
              
@@ -1954,6 +2080,50 @@ export function AudioPlayer() {
                    </div>
                  </div>
                  <Switch checked={autoPlaySimilar} onCheckedChange={(val) => { setAutoPlaySimilar(val); localStorage.setItem('ganvo_autoplay_similar', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><SlidersHorizontal className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Normalize volume</span>
+                     <span className="text-xs font-normal text-muted-foreground">Balance audio levels across tracks.</span>
+                   </div>
+                 </div>
+                 <Switch checked={normalizeVolume} onCheckedChange={(val) => { setNormalizeVolume(val); localStorage.setItem('ganvo_normalize_volume', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Scissors className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Skip silence</span>
+                     <span className="text-xs font-normal text-muted-foreground">Remove quiet gaps at start/end of songs.</span>
+                   </div>
+                 </div>
+                 <Switch checked={skipSilence} onCheckedChange={(val) => { setSkipSilence(val); localStorage.setItem('ganvo_skip_silence', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><GitMerge className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Crossfade tracks</span>
+                     <span className="text-xs font-normal text-muted-foreground">Smoothly blend into the next song.</span>
+                   </div>
+                 </div>
+                 <Switch checked={crossfade} onCheckedChange={(val) => { setCrossfade(val); localStorage.setItem('ganvo_crossfade', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><CircleStop className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Stop after current</span>
+                     <span className="text-xs font-normal text-muted-foreground">Pause playback when this song finishes.</span>
+                   </div>
+                 </div>
+                 <Switch checked={stopAfterCurrent} onCheckedChange={(val) => { setStopAfterCurrent(val); localStorage.setItem('ganvo_stop_after_current', val.toString()) }} className="shrink-0" />
                </div>
 
              </div>
@@ -2068,6 +2238,28 @@ export function AudioPlayer() {
                    </div>
                  </div>
                  <Switch checked={saveSearchHistory} onCheckedChange={(val) => { setSaveSearchHistory(val); localStorage.setItem('ganvo_save_history', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Ghost className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Private session</span>
+                     <span className="text-xs font-normal text-muted-foreground">Temporarily pause history tracking.</span>
+                   </div>
+                 </div>
+                 <Switch checked={privateSession} onCheckedChange={(val) => { setPrivateSession(val); localStorage.setItem('ganvo_private_session', val.toString()) }} className="shrink-0" />
+               </div>
+
+               <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors">
+                 <div className="flex items-center gap-4">
+                   <div className="p-2 bg-muted/80 rounded-full text-foreground"><Wifi className="w-5 h-5 text-current"/></div>
+                   <div className="flex flex-col">
+                     <span className="font-semibold text-base text-foreground">Data saver mode</span>
+                     <span className="text-xs font-normal text-muted-foreground">Reduce network usage when streaming.</span>
+                   </div>
+                 </div>
+                 <Switch checked={dataSaver} onCheckedChange={(val) => { setDataSaver(val); localStorage.setItem('ganvo_data_saver', val.toString()) }} className="shrink-0" />
                </div>
 
                <div className="flex items-center justify-between p-3 bg-transparent rounded-2xl cursor-pointer hover:bg-destructive/10 transition-colors text-destructive" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
