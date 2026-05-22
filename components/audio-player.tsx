@@ -117,6 +117,19 @@ const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactN
   )
 }
 
+const SettingsRow = ({ icon: Icon, title, desc, onClick, children }: { icon: any, title: string, desc: string, onClick?: () => void, children?: React.ReactNode }) => (
+  <div onClick={onClick} className="flex items-center justify-between p-3 md:p-4 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors gap-2">
+    <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+      <div className="p-2 md:p-2.5 bg-muted/80 rounded-xl text-foreground shrink-0"><Icon className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
+      <div className="flex flex-col flex-1 min-w-0 pr-2">
+        <span className="font-bold text-sm md:text-base text-foreground truncate">{title}</span>
+        <span className="text-[11px] md:text-xs font-medium text-muted-foreground leading-tight mt-0.5 line-clamp-2 md:line-clamp-1">{desc}</span>
+      </div>
+    </div>
+    {children}
+  </div>
+)
+
 export function AudioPlayer() {
   const[isDark, setIsDark] = useState(false)
   const[isFullscreen, setIsFullscreen] = useState(false)
@@ -962,18 +975,18 @@ export function AudioPlayer() {
 
   const PlayerMenuOptions = ({ song }: { song: Song }) => (
     <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] shadow-xl z-[400] border-border/50 p-2">
-       <DropdownMenuItem onClick={() => song.artistId && loadArtistView(song.artistId)} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
+       <DropdownMenuItem onSelect={() => { if (song.artistId) loadArtistView(song.artistId); }} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
          <UserCircle2 className="mr-3 h-5 w-5 text-muted-foreground" /> Go to Artist
        </DropdownMenuItem>
        {song.album && (
-         <DropdownMenuItem onClick={() => { setSearchQuery(song.album); setSearchFocused(true); }} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
+         <DropdownMenuItem onSelect={() => { setSearchQuery(song.album); setSearchFocused(true); setIsMobilePlayerExpanded(false); }} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
            <Disc3 className="mr-3 h-5 w-5 text-muted-foreground" /> Search Album
          </DropdownMenuItem>
        )}
        <DropdownMenuSeparator className="my-2" />
        <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
        {playlists.map(pl => (
-         <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 text-foreground transition-all active:scale-[0.98]"><ListMusic className="mr-3 h-4 w-4 text-primary" /> {pl.name}</DropdownMenuItem>
+         <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 text-foreground transition-all active:scale-[0.98]"><ListMusic className="mr-3 h-4 w-4 text-primary" /> {pl.name}</DropdownMenuItem>
        ))}
     </DropdownMenuContent>
   )
@@ -1590,7 +1603,7 @@ export function AudioPlayer() {
               {user && (
                 <>
                   <DropdownMenuSeparator className="my-2"/>
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer gap-3 rounded-xl py-3 font-bold text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors active:scale-[0.98]">
+                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer gap-3 rounded-xl py-3 font-bold text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors active:scale-[0.98]">
                     <LogOut className="h-5 w-5 text-current" /> Sign Out
                   </DropdownMenuItem>
                 </>
@@ -1666,7 +1679,7 @@ export function AudioPlayer() {
                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                                   <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
                                   {playlists.map(pl => (
-                                    <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-95 text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
+                                    <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-95 text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1731,7 +1744,7 @@ export function AudioPlayer() {
                             <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                               <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
                               {playlists.map(pl => (
-                                <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
+                                <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1824,7 +1837,7 @@ export function AudioPlayer() {
                             <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                               <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
                               {playlists.map(pl => (
-                                <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
+                                <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -2025,7 +2038,7 @@ export function AudioPlayer() {
                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                                   <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
                                   {playlists.map(pl => (
-                                    <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
+                                    <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -2064,7 +2077,7 @@ export function AudioPlayer() {
                           <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                             <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
                             {playlists.map(pl => (
-                              <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
+                              <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -2086,19 +2099,22 @@ export function AudioPlayer() {
       {/* --- MINI BOTTOM PLAYER (Mobile) --- */}
       {currentSong && !isMobilePlayerExpanded && (
         <div className="fixed bottom-4 left-4 right-4 z-[150] transition-all duration-500 ease-out lg:hidden">
-          <div onClick={() => setIsMobilePlayerExpanded(true)} className="flex items-center gap-4 rounded-[2.5rem] bg-card/95 p-3 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgba(0,0,0,0.2)] transition-all duration-500 cursor-pointer active:scale-[0.98]">
-            <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-[1.25rem] shadow-sm">
+          <div onClick={() => setIsMobilePlayerExpanded(true)} className="flex items-center gap-3 rounded-[2rem] bg-card/95 p-2 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgba(0,0,0,0.2)] transition-all duration-500 cursor-pointer active:scale-[0.98]">
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-[1rem] shadow-sm ml-1">
               <img src={currentSong.thumbnail || "/placeholder.svg"} className={cn("aspect-square w-full h-full object-cover transition-transform duration-700 ease-out", isPlaying ? "scale-110" : "scale-100")} />
             </div>
             <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center px-1">
-              <p className="truncate text-base font-extrabold leading-tight transition-colors text-foreground">{currentSong.title}</p>
-              <p className="truncate text-sm font-semibold text-muted-foreground mt-0.5 transition-colors">{currentSong.artist}</p>
+              <p className="truncate text-sm md:text-base font-extrabold leading-tight transition-colors text-foreground">{currentSong.title}</p>
+              <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5 transition-colors">{currentSong.artist}</p>
             </div>
-            <Button onClick={(e) => { e.stopPropagation(); toggleLike(currentSong) }} variant="ghost" size="icon" className={cn("h-12 w-12 flex-shrink-0 p-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 text-foreground outline-none focus:outline-none", likedSongs.has(currentSong.videoId) && "text-[var(--google-red)] hover:text-[var(--google-red)]")}>
-              <Heart className={cn("h-6 w-6 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]", likedSongs.has(currentSong.videoId) ? "fill-current scale-110 text-current" : "text-current")} />
+            <Button onClick={(e) => { e.stopPropagation(); toggleLike(currentSong) }} variant="ghost" size="icon" className={cn("h-10 w-10 flex-shrink-0 p-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 text-foreground outline-none focus:outline-none", likedSongs.has(currentSong.videoId) && "text-[var(--google-red)] hover:text-[var(--google-red)]")}>
+              <Heart className={cn("h-5 w-5 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]", likedSongs.has(currentSong.videoId) ? "fill-current scale-110 text-current" : "text-current")} />
             </Button>
-            <Button size="icon" onClick={(e) => { e.stopPropagation(); togglePlay() }} disabled={isLoading} className={cn("h-14 w-14 flex flex-shrink-0 p-0 items-center justify-center rounded-[1.5rem] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] active:scale-90 outline-none focus:outline-none", isPlaying ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
-              {isLoading ? <Loader2 className="h-6 w-6 animate-spin text-current" /> : isPlaying ? <Pause className="text-[28px]" /> : <Play className="text-[28px] translate-x-[2px]" />}
+            <Button size="icon" onClick={(e) => { e.stopPropagation(); togglePlay() }} disabled={isLoading} className={cn("h-12 w-12 flex flex-shrink-0 p-0 items-center justify-center rounded-2xl shadow-md transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] active:scale-90 outline-none focus:outline-none", isPlaying ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-current" /> : isPlaying ? <Pause className="text-[24px]" /> : <Play className="text-[24px] translate-x-[2px]" />}
+            </Button>
+            <Button size="icon" onClick={(e) => { e.stopPropagation(); setQueue([]); setCurrentIndex(0); }} variant="ghost" className="h-10 w-10 flex flex-shrink-0 p-0 items-center justify-center rounded-full transition-all duration-300 active:scale-90 text-muted-foreground hover:bg-destructive/10 hover:text-destructive outline-none focus:outline-none mr-1">
+              <X className="h-5 w-5 text-current" />
             </Button>
           </div>
         </div>
@@ -2389,425 +2405,200 @@ export function AudioPlayer() {
       
       <Dialog open={showPlayerSettings} onOpenChange={setShowPlayerSettings}>
         <DialogContent className="rounded-[2.5rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[400]">
-          <div className="flex items-center gap-4 p-6 border-b bg-card/50 backdrop-blur-sm">
+          <div className="flex items-center gap-4 p-5 md:p-6 border-b bg-card/50 backdrop-blur-sm">
             <Button variant="ghost" size="icon" onClick={() => setShowPlayerSettings(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
             <h2 className="text-2xl font-black tracking-tight text-foreground">Settings</h2>
           </div>
           <div className="p-2 overflow-y-auto max-h-[70vh] no-scrollbar pb-10">
              
              {/* Appearance Settings */}
-             <div className="px-5 py-4 space-y-2">
-               <h3 className="text-sm font-extrabold text-primary mb-4 uppercase tracking-widest ml-2">Appearance</h3>
-               
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setShowColorPalette(true)}>
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Palette className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Theme colors</span>
-                     <span className="text-sm font-medium text-muted-foreground">{activeTheme.name || 'Default'}</span>
-                   </div>
-                 </div>
-                 <ChevronRight className="w-6 h-6 text-muted-foreground" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><LayoutTemplate className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Dynamic theme</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Extracts colors from the active album cover.</span>
-                   </div>
-                 </div>
+             <div className="px-3 md:px-5 py-4 space-y-1">
+               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Appearance</h3>
+               <SettingsRow icon={Palette} title="Theme colors" desc={activeTheme.name || 'Default'} onClick={() => setShowColorPalette(true)}>
+                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground shrink-0" />
+               </SettingsRow>
+               <SettingsRow icon={LayoutTemplate} title="Dynamic theme" desc="Extracts colors from the active album cover.">
                  <Switch checked={dynamicTheme} onCheckedChange={setDynamicTheme} className="shrink-0" />
-               </div>
-               
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setIsDark(!isDark)}>
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Moon className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Dark mode</span>
-                     <span className="text-sm font-medium text-muted-foreground">Toggle application theme.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Moon} title="Dark mode" desc="Toggle application theme." onClick={() => setIsDark(!isDark)}>
                  <Switch checked={isDark} onCheckedChange={setIsDark} className="shrink-0 pointer-events-none" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Activity className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Reduce motion</span>
-                     <span className="text-sm font-medium text-muted-foreground">Disables player scale animations.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Activity} title="Reduce motion" desc="Disables player scale animations.">
                  <Switch checked={reduceMotion} onCheckedChange={(val) => { setReduceMotion(val); localStorage.setItem('ganvo_reduce_motion', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Wind className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Disable all animations</span>
-                     <span className="text-sm font-medium text-muted-foreground">Removes all transitions and motion.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Wind} title="Disable all animations" desc="Removes all transitions and motion.">
                  <Switch checked={disableAnimations} onCheckedChange={(val) => { setDisableAnimations(val); localStorage.setItem('ganvo_disable_animations', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Droplets className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Disable blur effects</span>
-                     <span className="text-sm font-medium text-muted-foreground">Removes backdrop blurs for performance.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Droplets} title="Disable blur effects" desc="Removes backdrop blurs for performance.">
                  <Switch checked={disableBlur} onCheckedChange={(val) => { setDisableBlur(val); localStorage.setItem('ganvo_disable_blur', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><EyeOff className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Hide Creator's Picks</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Remove top picks from the Explore tab.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={EyeOff} title="Hide Creator's Picks" desc="Remove top picks from the Explore tab.">
                  <Switch checked={hideCreatorsPicks} onCheckedChange={(val) => { setHideCreatorsPicks(val); localStorage.setItem('ganvo_hide_picks', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Rows3 className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Compact queue layout</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Shrink queue items to show more per page.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Rows3} title="Compact queue layout" desc="Shrink queue items to show more per page.">
                  <Switch checked={compactQueue} onCheckedChange={(val) => { setCompactQueue(val); localStorage.setItem('ganvo_compact_queue', val.toString()) }} className="shrink-0" />
-               </div>
+               </SettingsRow>
              </div>
              
              {/* Player Settings */}
-             <div className="px-5 py-4 space-y-2">
-               <h3 className="text-sm font-extrabold text-primary mb-4 uppercase tracking-widest ml-2">Player View</h3>
-               
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Music2 className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Player style</span>
-                     <span className="text-sm font-medium text-muted-foreground">Main screen design.</span>
-                   </div>
-                 </div>
+             <div className="px-3 md:px-5 py-4 space-y-1">
+               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Player View</h3>
+               <SettingsRow icon={Music2} title="Player style" desc="Main screen design.">
                  <Select value={playerStyle} onValueChange={(v: any) => { setPlayerStyle(v); localStorage.setItem('ganvo_player_style', v); }}>
-                    <SelectTrigger className="w-[130px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Style" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Classic" className="font-bold py-3 text-sm">Classic</SelectItem>
-                      <SelectItem value="Open" className="font-bold py-3 text-sm">Open</SelectItem>
-                      <SelectItem value="Modern" className="font-bold py-3 text-sm">Modern</SelectItem>
-                      <SelectItem value="Minimal" className="font-bold py-3 text-sm">Minimal</SelectItem>
-                      <SelectItem value="Cinematic" className="font-bold py-3 text-sm">Cinematic</SelectItem>
-                      <SelectItem value="Expressive" className="font-bold py-3 text-sm">Expressive</SelectItem>
-                      <SelectItem value="Immersive" className="font-bold py-3 text-sm">Immersive</SelectItem>
+                      <SelectItem value="Classic" className="font-bold py-2 md:py-3 text-xs md:text-sm">Classic</SelectItem>
+                      <SelectItem value="Open" className="font-bold py-2 md:py-3 text-xs md:text-sm">Open</SelectItem>
+                      <SelectItem value="Modern" className="font-bold py-2 md:py-3 text-xs md:text-sm">Modern</SelectItem>
+                      <SelectItem value="Minimal" className="font-bold py-2 md:py-3 text-xs md:text-sm">Minimal</SelectItem>
+                      <SelectItem value="Cinematic" className="font-bold py-2 md:py-3 text-xs md:text-sm">Cinematic</SelectItem>
+                      <SelectItem value="Expressive" className="font-bold py-2 md:py-3 text-xs md:text-sm">Expressive</SelectItem>
+                      <SelectItem value="Immersive" className="font-bold py-2 md:py-3 text-xs md:text-sm">Immersive</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><LayoutTemplate className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Background style</span>
-                     <span className="text-sm font-medium text-muted-foreground">How the background renders.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={LayoutTemplate} title="Background style" desc="How the background renders.">
                  <Select disabled={!dynamicTheme} value={playerBgStyle} onValueChange={(v: any) => setPlayerBgStyle(v)}>
-                    <SelectTrigger className="w-[130px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Style" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Theme" className="font-bold py-3 text-sm">Follow theme</SelectItem>
-                      <SelectItem value="Gradient" className="font-bold py-3 text-sm">Gradient</SelectItem>
-                      <SelectItem value="Blur" className="font-bold py-3 text-sm">Blur</SelectItem>
+                      <SelectItem value="Theme" className="font-bold py-2 md:py-3 text-xs md:text-sm">Follow theme</SelectItem>
+                      <SelectItem value="Gradient" className="font-bold py-2 md:py-3 text-xs md:text-sm">Gradient</SelectItem>
+                      <SelectItem value="Blur" className="font-bold py-2 md:py-3 text-xs md:text-sm">Blur</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-
-               <div className="flex flex-col p-4 mt-2 bg-transparent rounded-[1.5rem] transition-colors">
-                 <div className="flex items-center justify-between mb-5">
-                   <div className="flex items-center gap-5">
-                     <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><CornerUpRight className="w-6 h-6 text-current"/></div>
-                     <span className="font-bold text-base text-foreground">Thumbnail corner radius</span>
+               </SettingsRow>
+               
+               <div className="flex flex-col p-3 md:p-4 mt-1 bg-transparent rounded-2xl transition-colors">
+                 <div className="flex items-center justify-between mb-4 gap-2">
+                   <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                     <div className="p-2 md:p-2.5 bg-muted/80 rounded-xl text-foreground shrink-0"><CornerUpRight className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
+                     <span className="font-bold text-sm md:text-base text-foreground truncate">Thumbnail corner radius</span>
                    </div>
-                   <span className="text-sm font-bold bg-muted px-3 py-1.5 rounded-full text-foreground">{thumbnailRadius}px</span>
+                   <span className="text-xs font-bold bg-muted px-2.5 py-1.5 rounded-full text-foreground shrink-0">{thumbnailRadius}px</span>
                  </div>
                  <Slider 
                     value={[thumbnailRadius]} 
                     min={0} max={64} step={2} 
                     onValueChange={(val) => setThumbnailRadius(val[0])} 
-                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-6 [&_[data-slot=thumb]]:w-6 [&_[data-slot=track]]:h-2" 
+                    className="[&_[data-slot=range]]:bg-primary [&_[data-slot=thumb]]:h-5 [&_[data-slot=thumb]]:w-5 [&_[data-slot=track]]:h-1.5" 
                   />
                </div>
 
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Maximize2 className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Auto-switch to player</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Jump to Player tab when selecting a song.</span>
-                   </div>
-                 </div>
+               <SettingsRow icon={Maximize2} title="Auto-switch to player" desc="Jump to Player tab when selecting a song.">
                  <Switch checked={autoSwitchToPlayer} onCheckedChange={(val) => { setAutoSwitchToPlayer(val); localStorage.setItem('ganvo_auto_switch_player', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Timer className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Show time remaining</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Display countdown instead of duration.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Timer} title="Show time remaining" desc="Display countdown instead of duration.">
                  <Switch checked={showTimeRemaining} onCheckedChange={(val) => { setShowTimeRemaining(val); localStorage.setItem('ganvo_show_time_remaining', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Gauge className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Show playback speed</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Display speed control on the player.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Gauge} title="Show playback speed" desc="Display speed control on the player.">
                  <Switch checked={showPlaybackSpeed} onCheckedChange={(val) => { setShowPlaybackSpeed(val); localStorage.setItem('ganvo_show_playback_speed', val.toString()) }} className="shrink-0" />
-               </div>
-               
+               </SettingsRow>
              </div>
              
              {/* Audio Settings */}
-             <div className="px-5 py-4 space-y-2">
-               <h3 className="text-sm font-extrabold text-primary mb-4 uppercase tracking-widest ml-2">Audio & Playback</h3>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Speaker className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Audio quality</span>
-                     <span className="text-sm font-medium text-muted-foreground">Streaming quality preset.</span>
-                   </div>
-                 </div>
+             <div className="px-3 md:px-5 py-4 space-y-1">
+               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Audio & Playback</h3>
+               <SettingsRow icon={Speaker} title="Audio quality" desc="Streaming quality preset.">
                  <Select value={audioQuality} onValueChange={(v: any) => { setAudioQuality(v); localStorage.setItem('ganvo_audio_quality', v)}}>
-                    <SelectTrigger className="w-[120px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Quality" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="High" className="font-bold py-3 text-sm">High</SelectItem>
-                      <SelectItem value="Standard" className="font-bold py-3 text-sm">Standard</SelectItem>
-                      <SelectItem value="Low" className="font-bold py-3 text-sm">Low</SelectItem>
+                      <SelectItem value="High" className="font-bold py-2 md:py-3 text-xs md:text-sm">High</SelectItem>
+                      <SelectItem value="Standard" className="font-bold py-2 md:py-3 text-xs md:text-sm">Standard</SelectItem>
+                      <SelectItem value="Low" className="font-bold py-2 md:py-3 text-xs md:text-sm">Low</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><ListFilter className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Auto-play similar songs</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Keep the music going when queue ends.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={ListFilter} title="Auto-play similar songs" desc="Keep the music going when queue ends.">
                  <Switch checked={autoPlaySimilar} onCheckedChange={(val) => { setAutoPlaySimilar(val); localStorage.setItem('ganvo_autoplay_similar', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><SlidersHorizontal className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Normalize volume</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Balance audio levels across tracks.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={SlidersHorizontal} title="Normalize volume" desc="Balance audio levels across tracks.">
                  <Switch checked={normalizeVolume} onCheckedChange={(val) => { setNormalizeVolume(val); localStorage.setItem('ganvo_normalize_volume', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Scissors className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Skip silence</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Remove quiet gaps at start/end of songs.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Scissors} title="Skip silence" desc="Remove quiet gaps at start/end of songs.">
                  <Switch checked={skipSilence} onCheckedChange={(val) => { setSkipSilence(val); localStorage.setItem('ganvo_skip_silence', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><GitMerge className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Crossfade tracks</span>
-                     <span className="text-sm font-medium text-muted-foreground">Smoothly blend into the next song.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={GitMerge} title="Crossfade tracks" desc="Smoothly blend into the next song.">
                  <Switch checked={crossfade} onCheckedChange={(val) => { setCrossfade(val); localStorage.setItem('ganvo_crossfade', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><CircleStop className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Stop after current</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Pause playback when this song finishes.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={CircleStop} title="Stop after current" desc="Pause playback when this song finishes.">
                  <Switch checked={stopAfterCurrent} onCheckedChange={(val) => { setStopAfterCurrent(val); localStorage.setItem('ganvo_stop_after_current', val.toString()) }} className="shrink-0" />
-               </div>
-
+               </SettingsRow>
              </div>
              
              {/* Lyrics Settings */}
-             <div className="px-5 py-4 space-y-2">
-               <h3 className="text-sm font-extrabold text-primary mb-4 uppercase tracking-widest ml-2">Lyrics</h3>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Mic2 className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Auto-open lyrics</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Switch to lyrics when playing a song.</span>
-                   </div>
-                 </div>
+             <div className="px-3 md:px-5 py-4 space-y-1">
+               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Lyrics</h3>
+               <SettingsRow icon={Mic2} title="Auto-open lyrics" desc="Switch to lyrics when playing a song.">
                  <Switch checked={autoOpenLyrics} onCheckedChange={(val) => { setAutoOpenLyrics(val); localStorage.setItem('ganvo_auto_open_lyrics', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><ArrowDownUp className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Auto-scroll lyrics</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Keep active lyric in the center.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={ArrowDownUp} title="Auto-scroll lyrics" desc="Keep active lyric in the center.">
                  <Switch checked={autoScrollLyrics} onCheckedChange={(val) => { setAutoScrollLyrics(val); localStorage.setItem('ganvo_auto_scroll_lyrics', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><AlignLeft className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Text alignment</span>
-                     <span className="text-sm font-medium text-muted-foreground">Align lyrics text to the edges.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={AlignLeft} title="Text alignment" desc="Align lyrics text to the edges.">
                  <Select value={lyricsAlignment} onValueChange={(v: any) => { setLyricsAlignment(v); localStorage.setItem('ganvo_lyrics_alignment', v)}}>
-                    <SelectTrigger className="w-[120px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Align" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Left" className="font-bold py-3 text-sm">Left</SelectItem>
-                      <SelectItem value="Center" className="font-bold py-3 text-sm">Center</SelectItem>
-                      <SelectItem value="Right" className="font-bold py-3 text-sm">Right</SelectItem>
+                      <SelectItem value="Left" className="font-bold py-2 md:py-3 text-xs md:text-sm">Left</SelectItem>
+                      <SelectItem value="Center" className="font-bold py-2 md:py-3 text-xs md:text-sm">Center</SelectItem>
+                      <SelectItem value="Right" className="font-bold py-2 md:py-3 text-xs md:text-sm">Right</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><LayoutTemplate className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Glass backdrop</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Darkened glass effect behind lyrics.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={LayoutTemplate} title="Glass backdrop" desc="Darkened glass effect behind lyrics.">
                  <Switch checked={lyricsGlass} onCheckedChange={(val) => { setLyricsGlass(val); localStorage.setItem('ganvo_lyrics_glass', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><MicVocal className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Data provider</span>
-                     <span className="text-sm font-medium text-muted-foreground">Source used for synced lyrics.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={MicVocal} title="Data provider" desc="Source used for synced lyrics.">
                  <Select value={lyricsProvider} onValueChange={(v: any) => { setLyricsProvider(v); localStorage.setItem('ganvo_lyrics_provider', v)}}>
-                    <SelectTrigger className="w-[120px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Provider" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="lrclib" className="font-bold py-3 text-sm">LRCLib</SelectItem>
-                      <SelectItem value="kugou" className="font-bold py-3 text-sm">KuGou</SelectItem>
+                      <SelectItem value="lrclib" className="font-bold py-2 md:py-3 text-xs md:text-sm">LRCLib</SelectItem>
+                      <SelectItem value="kugou" className="font-bold py-2 md:py-3 text-xs md:text-sm">KuGou</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
-
-               <div className="flex items-center justify-between p-4 mt-2 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Type className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Text size</span>
-                     <span className="text-sm font-medium text-muted-foreground">Adjust synced lyrics font size.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Type} title="Text size" desc="Adjust synced lyrics font size.">
                  <Select value={lyricsSize} onValueChange={(v: any) => setLyricsSize(v)}>
-                    <SelectTrigger className="w-[140px] rounded-2xl font-bold bg-muted border-none text-foreground text-sm h-12 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] md:w-[140px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Size" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Normal" className="font-bold py-3 text-sm">Normal</SelectItem>
-                      <SelectItem value="Large" className="font-bold py-3 text-sm">Large</SelectItem>
-                      <SelectItem value="Extra Large" className="font-bold py-3 text-sm">Extra Large</SelectItem>
+                      <SelectItem value="Normal" className="font-bold py-2 md:py-3 text-xs md:text-sm">Normal</SelectItem>
+                      <SelectItem value="Large" className="font-bold py-2 md:py-3 text-xs md:text-sm">Large</SelectItem>
+                      <SelectItem value="Extra Large" className="font-bold py-2 md:py-3 text-xs md:text-sm">Extra Large</SelectItem>
                     </SelectContent>
                   </Select>
-               </div>
+               </SettingsRow>
              </div>
 
              {/* Data Settings */}
-             <div className="px-5 py-4 space-y-2">
-               <h3 className="text-sm font-extrabold text-primary mb-4 uppercase tracking-widest ml-2">Data & Privacy</h3>
-               
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><History className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Save search history</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Remember your previous searches.</span>
-                   </div>
-                 </div>
+             <div className="px-3 md:px-5 py-4 space-y-1">
+               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Data & Privacy</h3>
+               <SettingsRow icon={History} title="Save search history" desc="Remember your previous searches.">
                  <Switch checked={saveSearchHistory} onCheckedChange={(val) => { setSaveSearchHistory(val); localStorage.setItem('ganvo_save_history', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Ghost className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Private session</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Temporarily pause history tracking.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Ghost} title="Private session" desc="Temporarily pause history tracking.">
                  <Switch checked={privateSession} onCheckedChange={(val) => { setPrivateSession(val); localStorage.setItem('ganvo_private_session', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-muted/50 transition-colors">
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-muted/80 rounded-[1rem] text-foreground"><Wifi className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-foreground">Data saver mode</span>
-                     <span className="text-sm font-medium text-muted-foreground max-w-[200px] leading-tight mt-1">Reduce network usage when streaming.</span>
-                   </div>
-                 </div>
+               </SettingsRow>
+               <SettingsRow icon={Wifi} title="Data saver mode" desc="Reduce network usage when streaming.">
                  <Switch checked={dataSaver} onCheckedChange={(val) => { setDataSaver(val); localStorage.setItem('ganvo_data_saver', val.toString()) }} className="shrink-0" />
-               </div>
-
-               <div className="flex items-center justify-between p-4 bg-transparent rounded-[1.5rem] cursor-pointer hover:bg-destructive/10 transition-colors text-destructive" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
-                 <div className="flex items-center gap-5">
-                   <div className="p-3 bg-destructive/10 rounded-[1rem] text-current"><Trash2 className="w-6 h-6 text-current"/></div>
-                   <div className="flex flex-col">
-                     <span className="font-bold text-base text-current">Clear all local data</span>
-                     <span className="text-sm font-medium opacity-80 mt-1">Resets settings and search history.</span>
+               </SettingsRow>
+               
+               <div className="flex items-center justify-between p-3 md:p-4 bg-transparent rounded-2xl cursor-pointer hover:bg-destructive/10 transition-colors text-destructive gap-2" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
+                 <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                   <div className="p-2 md:p-2.5 bg-destructive/10 rounded-xl text-current shrink-0"><Trash2 className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
+                   <div className="flex flex-col flex-1 min-w-0">
+                     <span className="font-bold text-sm md:text-base text-current truncate">Clear all local data</span>
+                     <span className="text-[11px] md:text-xs font-medium opacity-80 mt-0.5 line-clamp-2 md:line-clamp-1">Resets settings and search history.</span>
                    </div>
                  </div>
                </div>
