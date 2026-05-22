@@ -118,12 +118,12 @@ const ScrollableRow = ({ children, title, icon: Icon }: { children: React.ReactN
 }
 
 const SettingsRow = ({ icon: Icon, title, desc, onClick, children }: { icon: any, title: string, desc: string, onClick?: () => void, children?: React.ReactNode }) => (
-  <div onClick={onClick} className="flex items-center justify-between p-3 md:p-4 bg-transparent rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors gap-2">
-    <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-      <div className="p-2 md:p-2.5 bg-muted/80 rounded-xl text-foreground shrink-0"><Icon className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
+  <div onClick={onClick} className="flex items-center justify-between p-4 bg-transparent rounded-[1rem] cursor-pointer hover:bg-muted/50 transition-colors gap-4">
+    <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="p-2.5 bg-muted/80 rounded-[0.75rem] text-foreground shrink-0"><Icon className="w-5 h-5 text-current"/></div>
       <div className="flex flex-col flex-1 min-w-0 pr-2">
-        <span className="font-bold text-sm md:text-base text-foreground truncate">{title}</span>
-        <span className="text-[11px] md:text-xs font-medium text-muted-foreground leading-tight mt-0.5 line-clamp-2 md:line-clamp-1">{desc}</span>
+        <span className="font-bold text-base text-foreground truncate">{title}</span>
+        <span className="text-sm font-medium text-muted-foreground leading-tight mt-0.5 line-clamp-2">{desc}</span>
       </div>
     </div>
     {children}
@@ -212,7 +212,6 @@ export function AudioPlayer() {
   const[reduceMotion, setReduceMotion] = useState(false)
   const[autoOpenLyrics, setAutoOpenLyrics] = useState(false)
 
-  // 10 New App Settings Added
   const[disableAnimations, setDisableAnimations] = useState(false)
   const[disableBlur, setDisableBlur] = useState(false)
   const[showTimeRemaining, setShowTimeRemaining] = useState(false)
@@ -270,7 +269,6 @@ export function AudioPlayer() {
     return "text-center origin-center"
   }
 
-  // Safely sample images while ensuring dead references are flushed
   useEffect(() => {
     let isActive = true;
     if (!currentSong?.thumbnail || playerBgStyle === 'Theme') {
@@ -973,23 +971,43 @@ export function AudioPlayer() {
     </div>
   )
 
-  const PlayerMenuOptions = ({ song }: { song: Song }) => (
-    <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] shadow-xl z-[400] border-border/50 p-2">
-       <DropdownMenuItem onSelect={() => { if (song.artistId) loadArtistView(song.artistId); }} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
-         <UserCircle2 className="mr-3 h-5 w-5 text-muted-foreground" /> Go to Artist
-       </DropdownMenuItem>
-       {song.album && (
-         <DropdownMenuItem onSelect={() => { setSearchQuery(song.album); setSearchFocused(true); setIsMobilePlayerExpanded(false); }} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
-           <Disc3 className="mr-3 h-5 w-5 text-muted-foreground" /> Search Album
+  const PlayerMenuOptions = ({ song }: { song: Song }) => {
+    const handleGoToArtist = () => {
+      if (song.artistId) {
+        loadArtistView(song.artistId);
+      } else {
+        setSearchQuery(song.artist);
+        setSearchFocused(true);
+      }
+      setIsMobilePlayerExpanded(false);
+    };
+
+    const handleSearchAlbum = () => {
+      if (song.album) {
+        setSearchQuery(song.album);
+        setSearchFocused(true);
+        setIsMobilePlayerExpanded(false);
+      }
+    };
+
+    return (
+      <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] shadow-xl z-[400] border-border/50 p-2">
+         <DropdownMenuItem onSelect={handleGoToArtist} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
+           <UserCircle2 className="mr-3 h-5 w-5 text-muted-foreground" /> Go to Artist
          </DropdownMenuItem>
-       )}
-       <DropdownMenuSeparator className="my-2" />
-       <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
-       {playlists.map(pl => (
-         <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 text-foreground transition-all active:scale-[0.98]"><ListMusic className="mr-3 h-4 w-4 text-primary" /> {pl.name}</DropdownMenuItem>
-       ))}
-    </DropdownMenuContent>
-  )
+         {song.album && (
+           <DropdownMenuItem onSelect={handleSearchAlbum} className="rounded-xl py-3 cursor-pointer text-foreground font-medium transition-all active:scale-[0.98]">
+             <Disc3 className="mr-3 h-5 w-5 text-muted-foreground" /> Search Album
+           </DropdownMenuItem>
+         )}
+         <DropdownMenuSeparator className="my-2" />
+         <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
+         {playlists.map(pl => (
+           <DropdownMenuItem key={pl.id} onSelect={() => { addSongToPlaylist(pl.id, song); setIsMobilePlayerExpanded(false); }} className="font-semibold cursor-pointer rounded-xl py-3 text-foreground transition-all active:scale-[0.98]"><ListMusic className="mr-3 h-4 w-4 text-primary" /> {pl.name}</DropdownMenuItem>
+         ))}
+      </DropdownMenuContent>
+    )
+  }
 
   // MOBILE PLAYER RENDERING STRATEGIES
   const renderClassicPlayer = () => (
@@ -1008,13 +1026,13 @@ export function AudioPlayer() {
          </div>
          <div className="flex-1 min-w-0 text-center px-4">
             <h2 className="text-2xl font-extrabold truncate text-foreground mb-1">{currentSong.title}</h2>
-            <button onClick={() => currentSong.artistId && loadArtistView(currentSong.artistId)} className="max-w-full text-base font-semibold text-muted-foreground/80 hover:text-primary hover:underline transition-colors outline-none focus:outline-none truncate">{currentSong.artist}</button>
+            <button onClick={() => { if(currentSong.artistId) loadArtistView(currentSong.artistId); setIsMobilePlayerExpanded(false); }} className="max-w-full text-base font-semibold text-muted-foreground/80 hover:text-primary hover:underline transition-colors outline-none focus:outline-none truncate">{currentSong.artist}</button>
          </div>
          <div className="flex items-center gap-1 flex-shrink-0">
            <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-12 w-12 p-0 rounded-full text-foreground hover:bg-primary/10 outline-none focus:outline-none">
               <Heart className={cn("h-6 w-6 transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
            </Button>
-           <DropdownMenu>
+           <DropdownMenu modal={false}>
              <DropdownMenuTrigger asChild>
                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full"><MoreIcon className="text-[24px]"/></Button>
              </DropdownMenuTrigger>
@@ -1084,7 +1102,7 @@ export function AudioPlayer() {
            <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-14 w-14 rounded-full hover:bg-muted">
               <Heart className={cn("text-[28px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
            </Button>
-           <DropdownMenu>
+           <DropdownMenu modal={false}>
              <DropdownMenuTrigger asChild>
                <Button variant="ghost" size="icon" className="h-14 w-14 rounded-full hover:bg-muted"><MoreIcon className="text-[28px]"/></Button>
              </DropdownMenuTrigger>
@@ -1140,7 +1158,7 @@ export function AudioPlayer() {
            <Button variant="secondary" size="icon" onClick={() => toggleLike(currentSong)} className="h-14 w-14 rounded-full bg-muted/60 hover:bg-muted/80">
               <Heart className={cn("text-[24px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
            </Button>
-           <DropdownMenu>
+           <DropdownMenu modal={false}>
              <DropdownMenuTrigger asChild>
                <Button variant="secondary" size="icon" className="h-14 w-14 rounded-full bg-muted/60 hover:bg-muted/80"><MoreIcon className="text-[24px]"/></Button>
              </DropdownMenuTrigger>
@@ -1195,7 +1213,7 @@ export function AudioPlayer() {
           <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="h-10 w-10 text-muted-foreground hover:bg-transparent">
             <Heart className={cn("h-6 w-6 transition-all", likedSongs.has(currentSong.videoId) ? "fill-foreground text-foreground" : "text-current")} />
           </Button>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-transparent"><MoreIcon className="text-[24px]"/></Button>
             </DropdownMenuTrigger>
@@ -1243,7 +1261,7 @@ export function AudioPlayer() {
             <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/70 hover:text-white shrink-0 h-14 w-14">
                <Heart className={cn("text-[28px] drop-shadow-md", likedSongs.has(currentSong.videoId) ? "fill-white text-white scale-110" : "")} />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white/70 hover:text-white shrink-0 h-14 w-14"><MoreIcon className="text-[28px] drop-shadow-md"/></Button>
               </DropdownMenuTrigger>
@@ -1288,7 +1306,7 @@ export function AudioPlayer() {
             <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-muted-foreground hover:bg-muted/50 rounded-full h-10 w-10">
                <Heart className={cn("text-[20px] transition-all", likedSongs.has(currentSong.videoId) ? "fill-[var(--primary)] text-[var(--primary)] scale-110" : "text-current")} />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-muted/50 rounded-full h-10 w-10"><MoreIcon className="text-[20px]"/></Button>
               </DropdownMenuTrigger>
@@ -1344,7 +1362,7 @@ export function AudioPlayer() {
             <Button variant="ghost" size="icon" onClick={() => toggleLike(currentSong)} className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full h-12 w-12 shrink-0 flex items-center justify-center p-0">
                <Heart className={cn("text-[24px]", likedSongs.has(currentSong.videoId) ? "fill-white text-white" : "")} />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full h-12 w-12 shrink-0 flex items-center justify-center p-0"><MoreIcon className="text-[24px]"/></Button>
               </DropdownMenuTrigger>
@@ -2107,9 +2125,7 @@ export function AudioPlayer() {
               <p className="truncate text-sm md:text-base font-extrabold leading-tight transition-colors text-foreground">{currentSong.title}</p>
               <p className="truncate text-xs font-semibold text-muted-foreground mt-0.5 transition-colors">{currentSong.artist}</p>
             </div>
-            <Button onClick={(e) => { e.stopPropagation(); toggleLike(currentSong) }} variant="ghost" size="icon" className={cn("h-10 w-10 flex-shrink-0 p-0 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 text-foreground outline-none focus:outline-none", likedSongs.has(currentSong.videoId) && "text-[var(--google-red)] hover:text-[var(--google-red)]")}>
-              <Heart className={cn("h-5 w-5 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]", likedSongs.has(currentSong.videoId) ? "fill-current scale-110 text-current" : "text-current")} />
-            </Button>
+            {/* Kept Play and X to ensure it always fits on screen */}
             <Button size="icon" onClick={(e) => { e.stopPropagation(); togglePlay() }} disabled={isLoading} className={cn("h-12 w-12 flex flex-shrink-0 p-0 items-center justify-center rounded-2xl shadow-md transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] active:scale-90 outline-none focus:outline-none", isPlaying ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-current" /> : isPlaying ? <Pause className="text-[24px]" /> : <Play className="text-[24px] translate-x-[2px]" />}
             </Button>
@@ -2182,7 +2198,7 @@ export function AudioPlayer() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-2xl animate-in fade-in zoom-in-95 duration-300 ease-out p-2 shadow-xl border-border/50 z-[400]">
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowPlayerSettings(true), 100); }} className="cursor-pointer gap-3 rounded-xl py-3 font-semibold transition-colors active:scale-[0.98] text-foreground outline-none focus:outline-none">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setTimeout(() => { setShowPlayerSettings(true); setIsMobilePlayerExpanded(false); }, 100); }} className="cursor-pointer gap-3 rounded-xl py-3 font-semibold transition-colors active:scale-[0.98] text-foreground outline-none focus:outline-none">
                 <Settings className="h-5 w-5 text-muted-foreground text-current" /> Settings
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -2274,12 +2290,12 @@ export function AudioPlayer() {
       {/* --- ALL DIALOGS (SETTINGS, EFFECTS, AUTH, PLAYLISTS, CREDITS) --- */}
       
       <Dialog open={showColorPalette} onOpenChange={setShowColorPalette}>
-        <DialogContent className="rounded-[2.5rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[500] max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex items-center gap-4 p-6 shrink-0">
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col !z-[500]">
+          <div className="flex items-center gap-4 p-5 sm:p-6 shrink-0 border-b">
             <Button variant="ghost" size="icon" onClick={() => setShowColorPalette(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
             <h2 className="text-2xl font-black text-foreground tracking-tight">Color Palette</h2>
           </div>
-          <div className="px-8 flex-1 overflow-y-auto no-scrollbar pb-8">
+          <div className="px-6 sm:px-8 py-6 flex-1 min-h-0 overflow-y-auto no-scrollbar pb-8">
             
             {/* Preview Card */}
             <div className="w-full h-64 rounded-[2rem] relative shadow-xl mb-10 flex flex-col justify-between p-8 transition-colors duration-500 overflow-hidden" style={{ backgroundColor: colorTheme === 'default' ? '#0f172a' : activeTheme.secondary }}>
@@ -2349,12 +2365,12 @@ export function AudioPlayer() {
       
       {/* Custom Theme Creation Dialog */}
       <Dialog open={showCustomThemeDialog} onOpenChange={setShowCustomThemeDialog}>
-        <DialogContent className="rounded-[2.5rem] sm:max-w-md p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550]">
-          <DialogHeader>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] overflow-y-auto flex flex-col min-h-0 !z-[550]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-2xl font-black text-foreground">Custom Theme</DialogTitle>
             <DialogDescription className="font-medium text-base">Select your primary and secondary colors.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSaveCustomTheme} className="space-y-6 mt-4">
+          <form onSubmit={handleSaveCustomTheme} className="space-y-6 mt-4 flex-1">
             <div className="space-y-3">
               <Label className="text-sm font-bold text-muted-foreground uppercase tracking-widest ml-1">Primary Color</Label>
               <div className="flex gap-4">
@@ -2373,7 +2389,7 @@ export function AudioPlayer() {
                 <Input value={tempSecondaryColor} onChange={(e) => setTempSecondaryColor(e.target.value)} className="h-14 rounded-2xl font-bold uppercase tracking-wider bg-muted/50 border-transparent text-foreground" />
               </div>
             </div>
-            <DialogFooter className="mt-8">
+            <DialogFooter className="mt-8 shrink-0">
                <Button type="button" variant="ghost" onClick={() => setShowCustomThemeDialog(false)} className="rounded-[1.5rem] h-12 font-bold px-6">Cancel</Button>
                <Button type="submit" className="rounded-[1.5rem] h-12 font-bold px-8 bg-primary text-primary-foreground shadow-lg hover:scale-105">Save Theme</Button>
             </DialogFooter>
@@ -2383,19 +2399,19 @@ export function AudioPlayer() {
 
       {/* Import Theme Dialog */}
       <Dialog open={showImportThemeDialog} onOpenChange={setShowImportThemeDialog}>
-        <DialogContent className="rounded-[2.5rem] sm:max-w-md p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550]">
-          <DialogHeader>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] overflow-y-auto flex flex-col min-h-0 !z-[550]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-2xl font-black text-foreground">Import Theme</DialogTitle>
             <DialogDescription className="font-medium text-base">Paste a theme JSON object.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleImportTheme} className="space-y-6 mt-4">
+          <form onSubmit={handleImportTheme} className="space-y-6 mt-4 flex-1">
             <Textarea 
               value={importThemeString}
               onChange={(e) => setImportThemeString(e.target.value)}
               placeholder={`{\n  "primary": "#ff0000",\n  "secondary": "#990000"\n}`}
               className="min-h-[150px] rounded-[1.5rem] font-mono text-sm bg-muted/50 border-transparent text-foreground resize-none p-4"
             />
-            <DialogFooter>
+            <DialogFooter className="shrink-0">
                <Button type="button" variant="ghost" onClick={() => setShowImportThemeDialog(false)} className="rounded-[1.5rem] h-12 font-bold px-6">Cancel</Button>
                <Button type="submit" disabled={!importThemeString.trim()} className="rounded-[1.5rem] h-12 font-bold px-8 bg-primary text-primary-foreground shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100">Apply</Button>
             </DialogFooter>
@@ -2404,18 +2420,18 @@ export function AudioPlayer() {
       </Dialog>
       
       <Dialog open={showPlayerSettings} onOpenChange={setShowPlayerSettings}>
-        <DialogContent className="rounded-[2.5rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[400]">
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b bg-card/50 backdrop-blur-sm">
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-background max-h-[85dvh] flex flex-col !z-[400]">
+          <div className="flex items-center gap-4 p-5 sm:p-6 border-b bg-card/50 backdrop-blur-sm shrink-0">
             <Button variant="ghost" size="icon" onClick={() => setShowPlayerSettings(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
             <h2 className="text-2xl font-black tracking-tight text-foreground">Settings</h2>
           </div>
-          <div className="p-2 overflow-y-auto max-h-[70vh] no-scrollbar pb-10">
+          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-2 pb-10">
              
              {/* Appearance Settings */}
-             <div className="px-3 md:px-5 py-4 space-y-1">
-               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Appearance</h3>
+             <div className="px-2 sm:px-4 py-4 space-y-1">
+               <h3 className="text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Appearance</h3>
                <SettingsRow icon={Palette} title="Theme colors" desc={activeTheme.name || 'Default'} onClick={() => setShowColorPalette(true)}>
-                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground shrink-0" />
+                 <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                </SettingsRow>
                <SettingsRow icon={LayoutTemplate} title="Dynamic theme" desc="Extracts colors from the active album cover.">
                  <Switch checked={dynamicTheme} onCheckedChange={setDynamicTheme} className="shrink-0" />
@@ -2441,44 +2457,44 @@ export function AudioPlayer() {
              </div>
              
              {/* Player Settings */}
-             <div className="px-3 md:px-5 py-4 space-y-1">
-               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Player View</h3>
+             <div className="px-2 sm:px-4 py-4 space-y-1">
+               <h3 className="text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Player View</h3>
                <SettingsRow icon={Music2} title="Player style" desc="Main screen design.">
                  <Select value={playerStyle} onValueChange={(v: any) => { setPlayerStyle(v); localStorage.setItem('ganvo_player_style', v); }}>
-                    <SelectTrigger className="w-[110px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[120px] sm:w-[130px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Style" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Classic" className="font-bold py-2 md:py-3 text-xs md:text-sm">Classic</SelectItem>
-                      <SelectItem value="Open" className="font-bold py-2 md:py-3 text-xs md:text-sm">Open</SelectItem>
-                      <SelectItem value="Modern" className="font-bold py-2 md:py-3 text-xs md:text-sm">Modern</SelectItem>
-                      <SelectItem value="Minimal" className="font-bold py-2 md:py-3 text-xs md:text-sm">Minimal</SelectItem>
-                      <SelectItem value="Cinematic" className="font-bold py-2 md:py-3 text-xs md:text-sm">Cinematic</SelectItem>
-                      <SelectItem value="Expressive" className="font-bold py-2 md:py-3 text-xs md:text-sm">Expressive</SelectItem>
-                      <SelectItem value="Immersive" className="font-bold py-2 md:py-3 text-xs md:text-sm">Immersive</SelectItem>
+                      <SelectItem value="Classic" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Classic</SelectItem>
+                      <SelectItem value="Open" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Open</SelectItem>
+                      <SelectItem value="Modern" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Modern</SelectItem>
+                      <SelectItem value="Minimal" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Minimal</SelectItem>
+                      <SelectItem value="Cinematic" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Cinematic</SelectItem>
+                      <SelectItem value="Expressive" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Expressive</SelectItem>
+                      <SelectItem value="Immersive" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Immersive</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
                <SettingsRow icon={LayoutTemplate} title="Background style" desc="How the background renders.">
                  <Select disabled={!dynamicTheme} value={playerBgStyle} onValueChange={(v: any) => setPlayerBgStyle(v)}>
-                    <SelectTrigger className="w-[110px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[120px] sm:w-[130px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Style" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Theme" className="font-bold py-2 md:py-3 text-xs md:text-sm">Follow theme</SelectItem>
-                      <SelectItem value="Gradient" className="font-bold py-2 md:py-3 text-xs md:text-sm">Gradient</SelectItem>
-                      <SelectItem value="Blur" className="font-bold py-2 md:py-3 text-xs md:text-sm">Blur</SelectItem>
+                      <SelectItem value="Theme" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Follow theme</SelectItem>
+                      <SelectItem value="Gradient" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Gradient</SelectItem>
+                      <SelectItem value="Blur" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Blur</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
                
-               <div className="flex flex-col p-3 md:p-4 mt-1 bg-transparent rounded-2xl transition-colors">
+               <div className="flex flex-col p-4 mt-1 bg-transparent rounded-2xl transition-colors">
                  <div className="flex items-center justify-between mb-4 gap-2">
-                   <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                     <div className="p-2 md:p-2.5 bg-muted/80 rounded-xl text-foreground shrink-0"><CornerUpRight className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
-                     <span className="font-bold text-sm md:text-base text-foreground truncate">Thumbnail corner radius</span>
+                   <div className="flex items-center gap-4 flex-1 min-w-0">
+                     <div className="p-2.5 bg-muted/80 rounded-xl text-foreground shrink-0"><CornerUpRight className="w-5 h-5 text-current"/></div>
+                     <span className="font-bold text-base text-foreground truncate">Thumbnail corner radius</span>
                    </div>
-                   <span className="text-xs font-bold bg-muted px-2.5 py-1.5 rounded-full text-foreground shrink-0">{thumbnailRadius}px</span>
+                   <span className="text-xs font-bold bg-muted px-3 py-1.5 rounded-full text-foreground shrink-0">{thumbnailRadius}px</span>
                  </div>
                  <Slider 
                     value={[thumbnailRadius]} 
@@ -2500,17 +2516,17 @@ export function AudioPlayer() {
              </div>
              
              {/* Audio Settings */}
-             <div className="px-3 md:px-5 py-4 space-y-1">
-               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Audio & Playback</h3>
+             <div className="px-2 sm:px-4 py-4 space-y-1">
+               <h3 className="text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Audio & Playback</h3>
                <SettingsRow icon={Speaker} title="Audio quality" desc="Streaming quality preset.">
                  <Select value={audioQuality} onValueChange={(v: any) => { setAudioQuality(v); localStorage.setItem('ganvo_audio_quality', v)}}>
-                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] sm:w-[130px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Quality" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="High" className="font-bold py-2 md:py-3 text-xs md:text-sm">High</SelectItem>
-                      <SelectItem value="Standard" className="font-bold py-2 md:py-3 text-xs md:text-sm">Standard</SelectItem>
-                      <SelectItem value="Low" className="font-bold py-2 md:py-3 text-xs md:text-sm">Low</SelectItem>
+                      <SelectItem value="High" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">High</SelectItem>
+                      <SelectItem value="Standard" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Standard</SelectItem>
+                      <SelectItem value="Low" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Low</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
@@ -2532,8 +2548,8 @@ export function AudioPlayer() {
              </div>
              
              {/* Lyrics Settings */}
-             <div className="px-3 md:px-5 py-4 space-y-1">
-               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Lyrics</h3>
+             <div className="px-2 sm:px-4 py-4 space-y-1">
+               <h3 className="text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Lyrics</h3>
                <SettingsRow icon={Mic2} title="Auto-open lyrics" desc="Switch to lyrics when playing a song.">
                  <Switch checked={autoOpenLyrics} onCheckedChange={(val) => { setAutoOpenLyrics(val); localStorage.setItem('ganvo_auto_open_lyrics', val.toString()) }} className="shrink-0" />
                </SettingsRow>
@@ -2542,13 +2558,13 @@ export function AudioPlayer() {
                </SettingsRow>
                <SettingsRow icon={AlignLeft} title="Text alignment" desc="Align lyrics text to the edges.">
                  <Select value={lyricsAlignment} onValueChange={(v: any) => { setLyricsAlignment(v); localStorage.setItem('ganvo_lyrics_alignment', v)}}>
-                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] sm:w-[130px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Align" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Left" className="font-bold py-2 md:py-3 text-xs md:text-sm">Left</SelectItem>
-                      <SelectItem value="Center" className="font-bold py-2 md:py-3 text-xs md:text-sm">Center</SelectItem>
-                      <SelectItem value="Right" className="font-bold py-2 md:py-3 text-xs md:text-sm">Right</SelectItem>
+                      <SelectItem value="Left" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Left</SelectItem>
+                      <SelectItem value="Center" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Center</SelectItem>
+                      <SelectItem value="Right" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Right</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
@@ -2557,32 +2573,32 @@ export function AudioPlayer() {
                </SettingsRow>
                <SettingsRow icon={MicVocal} title="Data provider" desc="Source used for synced lyrics.">
                  <Select value={lyricsProvider} onValueChange={(v: any) => { setLyricsProvider(v); localStorage.setItem('ganvo_lyrics_provider', v)}}>
-                    <SelectTrigger className="w-[100px] md:w-[130px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] sm:w-[130px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Provider" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="lrclib" className="font-bold py-2 md:py-3 text-xs md:text-sm">LRCLib</SelectItem>
-                      <SelectItem value="kugou" className="font-bold py-2 md:py-3 text-xs md:text-sm">KuGou</SelectItem>
+                      <SelectItem value="lrclib" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">LRCLib</SelectItem>
+                      <SelectItem value="kugou" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">KuGou</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
                <SettingsRow icon={Type} title="Text size" desc="Adjust synced lyrics font size.">
                  <Select value={lyricsSize} onValueChange={(v: any) => setLyricsSize(v)}>
-                    <SelectTrigger className="w-[110px] md:w-[140px] rounded-xl md:rounded-2xl font-bold bg-muted border-none text-foreground text-xs md:text-sm h-9 md:h-11 shrink-0 outline-none focus:ring-0">
+                    <SelectTrigger className="w-[110px] sm:w-[140px] rounded-xl sm:rounded-2xl font-bold bg-muted border-none text-foreground text-xs sm:text-sm h-10 sm:h-11 shrink-0 outline-none focus:ring-0">
                       <SelectValue placeholder="Size" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl z-[500]">
-                      <SelectItem value="Normal" className="font-bold py-2 md:py-3 text-xs md:text-sm">Normal</SelectItem>
-                      <SelectItem value="Large" className="font-bold py-2 md:py-3 text-xs md:text-sm">Large</SelectItem>
-                      <SelectItem value="Extra Large" className="font-bold py-2 md:py-3 text-xs md:text-sm">Extra Large</SelectItem>
+                      <SelectItem value="Normal" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Normal</SelectItem>
+                      <SelectItem value="Large" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Large</SelectItem>
+                      <SelectItem value="Extra Large" className="font-bold py-2.5 sm:py-3 text-xs sm:text-sm">Extra Large</SelectItem>
                     </SelectContent>
                   </Select>
                </SettingsRow>
              </div>
 
              {/* Data Settings */}
-             <div className="px-3 md:px-5 py-4 space-y-1">
-               <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Data & Privacy</h3>
+             <div className="px-2 sm:px-4 py-4 space-y-1">
+               <h3 className="text-xs font-extrabold text-primary mb-4 uppercase tracking-widest ml-4">Data & Privacy</h3>
                <SettingsRow icon={History} title="Save search history" desc="Remember your previous searches.">
                  <Switch checked={saveSearchHistory} onCheckedChange={(val) => { setSaveSearchHistory(val); localStorage.setItem('ganvo_save_history', val.toString()) }} className="shrink-0" />
                </SettingsRow>
@@ -2593,12 +2609,12 @@ export function AudioPlayer() {
                  <Switch checked={dataSaver} onCheckedChange={(val) => { setDataSaver(val); localStorage.setItem('ganvo_data_saver', val.toString()) }} className="shrink-0" />
                </SettingsRow>
                
-               <div className="flex items-center justify-between p-3 md:p-4 bg-transparent rounded-2xl cursor-pointer hover:bg-destructive/10 transition-colors text-destructive gap-2" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
-                 <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-                   <div className="p-2 md:p-2.5 bg-destructive/10 rounded-xl text-current shrink-0"><Trash2 className="w-4 h-4 md:w-5 md:h-5 text-current"/></div>
+               <div className="flex items-center justify-between p-4 bg-transparent rounded-2xl cursor-pointer hover:bg-destructive/10 transition-colors text-destructive gap-4" onClick={() => { if(window.confirm("Clear all app preferences and search history? Your cloud playlists will not be deleted.")) { localStorage.clear(); window.location.reload(); } }}>
+                 <div className="flex items-center gap-4 flex-1 min-w-0">
+                   <div className="p-2.5 bg-destructive/10 rounded-xl text-current shrink-0"><Trash2 className="w-5 h-5 text-current"/></div>
                    <div className="flex flex-col flex-1 min-w-0">
-                     <span className="font-bold text-sm md:text-base text-current truncate">Clear all local data</span>
-                     <span className="text-[11px] md:text-xs font-medium opacity-80 mt-0.5 line-clamp-2 md:line-clamp-1">Resets settings and search history.</span>
+                     <span className="font-bold text-base text-current truncate">Clear all local data</span>
+                     <span className="text-sm font-medium opacity-80 mt-0.5 line-clamp-2">Resets settings and search history.</span>
                    </div>
                  </div>
                </div>
@@ -2609,82 +2625,82 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="rounded-[3rem] sm:max-w-md p-10 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none bg-background !z-[400]">
-          <DialogHeader>
-            <div className="mb-6 flex justify-center"><div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-primary/10 text-primary"><UserCircle2 className="h-12 w-12 text-current" /></div></div>
-            <DialogTitle className="text-3xl font-black text-center text-foreground">Account Sync</DialogTitle>
-            <DialogDescription className="font-medium text-center mt-3 text-base">Sign in to save your playlists and liked songs to the cloud.</DialogDescription>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col min-h-0 overflow-y-auto !z-[400]">
+          <DialogHeader className="shrink-0">
+            <div className="mb-4 sm:mb-6 flex justify-center"><div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] bg-primary/10 text-primary"><UserCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-current" /></div></div>
+            <DialogTitle className="text-2xl sm:text-3xl font-black text-center text-foreground">Account Sync</DialogTitle>
+            <DialogDescription className="font-medium text-center mt-2 sm:mt-3 text-sm sm:text-base">Sign in to save your playlists and liked songs to the cloud.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEmailAuth} className="space-y-5 mt-4">
-            <div className="space-y-4">
-              <Input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required className="h-16 rounded-[1.5rem] bg-muted/50 border-transparent focus-visible:ring-primary font-bold px-6 text-lg text-foreground outline-none" />
-              <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="h-16 rounded-[1.5rem] bg-muted/50 border-transparent focus-visible:ring-primary font-bold px-6 text-lg text-foreground outline-none" />
+          <form onSubmit={handleEmailAuth} className="space-y-4 sm:space-y-5 mt-4 flex-1">
+            <div className="space-y-3 sm:space-y-4">
+              <Input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required className="h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] bg-muted/50 border-transparent focus-visible:ring-primary font-bold px-5 sm:px-6 text-base sm:text-lg text-foreground outline-none" />
+              <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required className="h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] bg-muted/50 border-transparent focus-visible:ring-primary font-bold px-5 sm:px-6 text-base sm:text-lg text-foreground outline-none" />
             </div>
-            {authError && <p className="text-sm font-bold text-destructive text-center p-4 bg-destructive/10 rounded-2xl animate-in slide-in-from-top-2">{authError}</p>}
-            <Button type="submit" className="w-full h-16 rounded-[1.5rem] font-bold text-lg shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] text-primary-foreground outline-none focus:outline-none">{isSignUp ? "Create Account" : "Sign In"}</Button>
-            <div className="flex items-center gap-3 my-6"><div className="flex-1 h-px bg-border"></div><span className="text-sm font-extrabold text-muted-foreground uppercase tracking-widest">OR</span><div className="flex-1 h-px bg-border"></div></div>
-            <Button type="button" variant="outline" onClick={handleGoogleSignIn} className="w-full h-16 rounded-[1.5rem] font-bold text-lg transition-all active:scale-[0.98] flex items-center justify-center gap-4 text-foreground outline-none focus:outline-none border-2">Continue with Google</Button>
-            <p className="text-base text-center font-bold text-primary mt-6 cursor-pointer hover:underline" onClick={() => {setIsSignUp(!isSignUp); setAuthError("")}}>{isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}</p>
+            {authError && <p className="text-sm font-bold text-destructive text-center p-3 sm:p-4 bg-destructive/10 rounded-2xl animate-in slide-in-from-top-2">{authError}</p>}
+            <Button type="submit" className="w-full h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] font-bold text-base sm:text-lg shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] text-primary-foreground outline-none focus:outline-none">{isSignUp ? "Create Account" : "Sign In"}</Button>
+            <div className="flex items-center gap-3 my-4 sm:my-6"><div className="flex-1 h-px bg-border"></div><span className="text-xs sm:text-sm font-extrabold text-muted-foreground uppercase tracking-widest">OR</span><div className="flex-1 h-px bg-border"></div></div>
+            <Button type="button" variant="outline" onClick={handleGoogleSignIn} className="w-full h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] font-bold text-base sm:text-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 sm:gap-4 text-foreground outline-none focus:outline-none border-2">Continue with Google</Button>
+            <p className="text-sm sm:text-base text-center font-bold text-primary mt-4 sm:mt-6 cursor-pointer hover:underline pb-4" onClick={() => {setIsSignUp(!isSignUp); setAuthError("")}}>{isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}</p>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showAccountSettings} onOpenChange={setShowAccountSettings}>
-        <DialogContent className="rounded-[3rem] sm:max-w-md p-10 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400]">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-black flex items-center gap-4 text-foreground"><UserCircle2 className="h-8 w-8 text-primary"/> Account Details</DialogTitle>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col min-h-0 overflow-y-auto !z-[400]">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3 sm:gap-4 text-foreground"><UserCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary"/> Account Details</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleUpdateProfile} className="space-y-8 mt-6">
-            <div className="space-y-3">
-              <label className="text-sm font-extrabold uppercase tracking-widest ml-2 text-muted-foreground">Display Name</label>
-              <Input value={displayNameInput} onChange={e => setDisplayNameInput(e.target.value)} placeholder="Your Name" className="h-16 rounded-[1.5rem] bg-muted/50 border-transparent font-bold px-6 text-xl text-foreground outline-none" />
+          <form onSubmit={handleUpdateProfile} className="space-y-6 sm:space-y-8 mt-4 sm:mt-6 flex-1">
+            <div className="space-y-2 sm:space-y-3">
+              <label className="text-xs sm:text-sm font-extrabold uppercase tracking-widest ml-2 text-muted-foreground">Display Name</label>
+              <Input value={displayNameInput} onChange={e => setDisplayNameInput(e.target.value)} placeholder="Your Name" className="h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] bg-muted/50 border-transparent font-bold px-5 sm:px-6 text-lg sm:text-xl text-foreground outline-none" />
             </div>
-            <div className="space-y-3">
-              <label className="text-sm font-extrabold uppercase tracking-widest ml-2 text-muted-foreground">Email Address</label>
-              <Input value={user?.email || ""} disabled className="h-16 rounded-[1.5rem] bg-muted/30 border-transparent font-semibold px-6 text-lg text-muted-foreground opacity-70 outline-none" />
+            <div className="space-y-2 sm:space-y-3">
+              <label className="text-xs sm:text-sm font-extrabold uppercase tracking-widest ml-2 text-muted-foreground">Email Address</label>
+              <Input value={user?.email || ""} disabled className="h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] bg-muted/30 border-transparent font-semibold px-5 sm:px-6 text-base sm:text-lg text-muted-foreground opacity-70 outline-none" />
             </div>
-            <Button type="submit" className="w-full h-16 rounded-[1.5rem] font-bold text-lg shadow-xl transition-transform active:scale-[0.98] text-primary-foreground outline-none focus:outline-none mt-4">Save Changes</Button>
+            <Button type="submit" className="w-full h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] font-bold text-base sm:text-lg shadow-xl transition-transform active:scale-[0.98] text-primary-foreground outline-none focus:outline-none mt-4">Save Changes</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog}>
-        <DialogContent className="rounded-[3rem] sm:max-w-md p-10 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400]">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-black flex items-center gap-4 text-foreground"><ListPlus className="h-8 w-8 text-primary"/> New Playlist</DialogTitle>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col min-h-0 overflow-y-auto !z-[400]">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3 sm:gap-4 text-foreground"><ListPlus className="h-6 w-6 sm:h-8 sm:w-8 text-primary"/> New Playlist</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreatePlaylist} className="space-y-8 mt-6">
+          <form onSubmit={handleCreatePlaylist} className="space-y-6 sm:space-y-8 mt-4 sm:mt-6 flex-1">
             <div className="space-y-3">
-              <Input value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} placeholder="Playlist Name" autoFocus required className="h-16 rounded-[1.5rem] bg-muted/50 border-transparent font-bold px-6 text-xl text-foreground outline-none" />
+              <Input value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} placeholder="Playlist Name" autoFocus required className="h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] bg-muted/50 border-transparent font-bold px-5 sm:px-6 text-lg sm:text-xl text-foreground outline-none" />
             </div>
-            <Button type="submit" className="w-full h-16 rounded-[1.5rem] font-bold text-lg shadow-xl transition-transform active:scale-[0.98] text-primary-foreground outline-none focus:outline-none">Create Playlist</Button>
+            <Button type="submit" className="w-full h-14 sm:h-16 rounded-[1.25rem] sm:rounded-[1.5rem] font-bold text-base sm:text-lg shadow-xl transition-transform active:scale-[0.98] text-primary-foreground outline-none focus:outline-none">Create Playlist</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showAboutDialog} onOpenChange={setShowAboutDialog}>
-        <DialogContent className="rounded-[3rem] sm:max-w-md p-8 sm:p-10 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400]">
-          <DialogHeader>
-            <div className="mb-6 flex items-center gap-5">
-              <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-primary shadow-xl"><Music2 className="h-10 w-10 text-primary-foreground fill-current" /></div>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col min-h-0 overflow-y-auto !z-[400]">
+          <DialogHeader className="shrink-0">
+            <div className="mb-4 sm:mb-6 flex items-center gap-4 sm:gap-5">
+              <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-primary shadow-xl"><Music2 className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground fill-current" /></div>
               <div>
-                <DialogTitle className="text-3xl font-black tracking-tight text-foreground">Ganvo Music</DialogTitle>
-                <DialogDescription className="font-bold mt-1 text-base">Version 1.0.0</DialogDescription>
+                <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Ganvo Music</DialogTitle>
+                <DialogDescription className="font-bold mt-1 text-sm sm:text-base">Version 1.0.0</DialogDescription>
               </div>
             </div>
           </DialogHeader>
-          <div className="space-y-5 text-base font-medium text-muted-foreground leading-relaxed mt-2">
+          <div className="space-y-4 sm:space-y-5 text-sm sm:text-base font-medium text-muted-foreground leading-relaxed mt-2 flex-1">
             <p>A modern audio player inspired by Material Design 3 Expressive, featuring seamless YouTube Music search, synchronized lyrics, and fluid animations.</p>
             <p>Built with Next.js App Router, Tailwind CSS, Firebase Auth, and shadcn/ui.</p>
             
-            <div className="flex flex-col gap-4 mt-6 bg-muted/40 p-6 rounded-[2rem]">
+            <div className="flex flex-col gap-3 sm:gap-4 mt-4 sm:mt-6 bg-muted/40 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem]">
               <div>
-                <h4 className="font-extrabold text-foreground mb-1 text-sm uppercase tracking-widest">Terms of Service</h4>
-                <p className="text-sm">By using this service, you agree to respect the intellectual property of the artists. This app is for personal, non-commercial use only.</p>
+                <h4 className="font-extrabold text-foreground mb-1 text-xs sm:text-sm uppercase tracking-widest">Terms of Service</h4>
+                <p className="text-xs sm:text-sm">By using this service, you agree to respect the intellectual property of the artists. This app is for personal, non-commercial use only.</p>
               </div>
               <div className="mt-2">
-                <h4 className="font-extrabold text-foreground mb-1 text-sm uppercase tracking-widest">Copyright</h4>
-                <p className="text-sm">All music metadata, album arts, and audio streams are provided through third-party APIs. Ganvo Music acts merely as a client.</p>
+                <h4 className="font-extrabold text-foreground mb-1 text-xs sm:text-sm uppercase tracking-widest">Copyright</h4>
+                <p className="text-xs sm:text-sm">All music metadata, album arts, and audio streams are provided through third-party APIs. Ganvo Music acts merely as a client.</p>
               </div>
             </div>
           </div>
@@ -2692,20 +2708,20 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
-        <DialogContent className="rounded-[3rem] sm:max-w-md p-8 sm:p-10 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400]">
-          <DialogHeader><DialogTitle className="flex items-center gap-4 text-3xl font-black tracking-tight text-foreground"><Heart className="h-8 w-8 text-[var(--google-red)] fill-[var(--google-red)]" />Credits</DialogTitle></DialogHeader>
-          <div className="space-y-5 mt-6">
-            <div className="rounded-[2rem] bg-muted/50 p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
-              <h4 className="mb-3 font-extrabold text-lg text-foreground uppercase tracking-wider">Inspired By</h4>
-              <a href="https://github.com/koiverse/ArchiveTune" target="_blank" className="flex items-center gap-2 text-base font-bold text-primary hover:underline transition-all active:scale-95 w-fit outline-none focus:outline-none">ArchiveTune by koiverse<ExternalLink className="h-5 w-5" /></a>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground leading-relaxed">Material 3 Expressive YouTube Music client for Android</p>
+        <DialogContent className="rounded-[2rem] sm:rounded-[2.5rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background max-h-[85dvh] flex flex-col min-h-0 overflow-y-auto !z-[400]">
+          <DialogHeader className="shrink-0"><DialogTitle className="flex items-center gap-3 sm:gap-4 text-2xl sm:text-3xl font-black tracking-tight text-foreground"><Heart className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--google-red)] fill-[var(--google-red)]" />Credits</DialogTitle></DialogHeader>
+          <div className="space-y-4 sm:space-y-5 mt-4 sm:mt-6 flex-1">
+            <div className="rounded-[1.5rem] sm:rounded-[2rem] bg-muted/50 p-5 sm:p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
+              <h4 className="mb-2 sm:mb-3 font-extrabold text-base sm:text-lg text-foreground uppercase tracking-wider">Inspired By</h4>
+              <a href="https://github.com/koiverse/ArchiveTune" target="_blank" className="flex items-center gap-2 text-sm sm:text-base font-bold text-primary hover:underline transition-all active:scale-95 w-fit outline-none focus:outline-none">ArchiveTune by koiverse<ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" /></a>
+              <p className="mt-2 text-xs sm:text-sm font-semibold text-muted-foreground leading-relaxed">Material 3 Expressive YouTube Music client for Android</p>
             </div>
-            <div className="rounded-[2rem] bg-muted/50 p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
-              <h4 className="mb-4 font-extrabold text-lg text-foreground uppercase tracking-wider">APIs & Services</h4>
-              <ul className="space-y-4 text-base font-semibold text-muted-foreground">
-                <li className="flex items-center gap-4 group"><span className="h-3 w-3 rounded-full bg-blue-500 shadow-md" />ytmusic-api (YouTube Music search)</li>
-                <li className="flex items-center gap-4 group"><span className="h-3 w-3 rounded-full bg-green-500 shadow-md" />LRCLIB & KuGou (Synchronized lyrics)</li>
-                <li className="flex items-center gap-4 group"><span className="h-3 w-3 rounded-full bg-yellow-500 shadow-md" />YouTube IFrame API (Native stream execution)</li>
+            <div className="rounded-[1.5rem] sm:rounded-[2rem] bg-muted/50 p-5 sm:p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
+              <h4 className="mb-3 sm:mb-4 font-extrabold text-base sm:text-lg text-foreground uppercase tracking-wider">APIs & Services</h4>
+              <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base font-semibold text-muted-foreground">
+                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500 shadow-md" />ytmusic-api (YouTube Music search)</li>
+                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-green-500 shadow-md" />LRCLIB & KuGou (Synchronized lyrics)</li>
+                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-yellow-500 shadow-md" />YouTube IFrame API (Native stream execution)</li>
               </ul>
             </div>
           </div>
