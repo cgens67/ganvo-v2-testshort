@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import {
   Search, Sun, Moon, Loader2, Music2,
@@ -490,7 +491,7 @@ export function AudioPlayer() {
     syncToCloud(savedSongs, updatedPlaylists)
     setNewPlaylistName("")
     setShowPlaylistDialog(false)
-    toast("Playlist created")
+    toast.success('Playlist created!')
   }
 
   const addSongToPlaylist = (playlistId: string, song: Song) => {
@@ -504,7 +505,7 @@ export function AudioPlayer() {
     })
     setPlaylists(updatedPlaylists)
     syncToCloud(savedSongs, updatedPlaylists)
-    toast("Song added to playlist")
+    toast.success('Added to playlist')
   }
 
   const handleSaveCustomTheme = (e: React.FormEvent) => {
@@ -515,7 +516,7 @@ export function AudioPlayer() {
     localStorage.setItem('ganvo_color_theme', 'custom')
     localStorage.setItem('ganvo_custom_theme', JSON.stringify(newTheme))
     setShowCustomThemeDialog(false)
-    toast("Custom theme applied!")
+    toast.success("Custom theme applied!")
   }
 
   const handleImportTheme = (e: React.FormEvent) => {
@@ -531,10 +532,10 @@ export function AudioPlayer() {
           localStorage.setItem('ganvo_custom_theme', JSON.stringify(parsed))
           setShowImportThemeDialog(false)
           setImportThemeString("")
-          toast("Theme imported successfully!")
+          toast.success("Theme imported successfully!")
        } else throw new Error()
     } catch(err) {
-       toast("Invalid theme format. Please provide valid JSON.", { style: { background: 'var(--destructive)', color: 'white' }})
+       toast.error("Invalid theme format. Please provide valid JSON.")
     }
   }
 
@@ -549,7 +550,7 @@ export function AudioPlayer() {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
-        toast("Link copied to clipboard!");
+        toast.success('Link copied to clipboard!');
       }
     } catch (err) {
       console.error('Error sharing:', err);
@@ -2019,7 +2020,7 @@ export function AudioPlayer() {
                             {playlists.length > 0 && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-muted-foreground hover:text-primary outline-none focus:outline-none"><ListPlus className="h-5 w-5 text-current" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary outline-none focus:outline-none"><ListPlus className="h-5 w-5 text-current" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                                   <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
