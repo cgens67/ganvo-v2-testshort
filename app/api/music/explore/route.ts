@@ -6,9 +6,10 @@ export const revalidate = 0
 
 export async function GET() {
   try {
-    const [artistsRes, songsRes, albumsRes] = await Promise.all([
+    const [artistsRes, songsRes, videosRes, albumsRes] = await Promise.all([
       InnerTube.searchArtists("Top Global Artists"),
-      InnerTube.searchSongs("Top Global Hits"),
+      InnerTube.searchSongs("Top Global Hits", false),
+      InnerTube.searchSongs("Official Music Videos", true),
       InnerTube.searchAlbums("Top Albums 2025"),
     ])
 
@@ -37,12 +38,14 @@ export async function GET() {
     const creatorsPicks = picksResults.filter(Boolean)
     const artists = artistsRes.slice(0, 15)
     const songs = songsRes.slice(0, 15)
+    const videos = videosRes.slice(0, 15)
     const albums = albumsRes.slice(0, 15)
 
     return NextResponse.json({
       creatorsPicks,
       artists,
       songs,
+      videos,
       albums,
     })
   } catch (error: any) {
