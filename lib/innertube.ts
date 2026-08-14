@@ -1,12 +1,4 @@
-export interface SongItem {
-  videoId: string
-  title: string
-  artist: string
-  artistId?: string | null
-  album: string
-  duration: number
-  thumbnail: string
-}
+import { Song } from "@/types/player"
 
 export interface ArtistItem {
   artistId: string
@@ -28,7 +20,7 @@ export interface ArtistDetails {
   description?: string
   subscribers?: string
   thumbnails: { url: string; width?: number; height?: number }[]
-  topSongs: SongItem[]
+  topSongs: Song[]
   albums: AlbumItem[]
   singles: AlbumItem[]
 }
@@ -38,7 +30,7 @@ export interface AlbumDetails {
   artist?: string
   year?: string | number
   thumbnails: { url: string; width?: number; height?: number }[]
-  songs: SongItem[]
+  songs: Song[]
 }
 
 export class InnerTube {
@@ -48,6 +40,10 @@ export class InnerTube {
   private static readonly CLIENT_NAME = "WEB_REMIX"
   private static readonly CLIENT_VERSION = "1.20260213.01.00"
   private static readonly CLIENT_ID = "67"
+
+  public static readonly MUSIC_VIDEO_TYPE_ATV = "MUSIC_VIDEO_TYPE_ATV"
+  public static readonly MUSIC_VIDEO_TYPE_OMV = "MUSIC_VIDEO_TYPE_OMV"
+  public static readonly MUSIC_VIDEO_TYPE_UGC = "MUSIC_VIDEO_TYPE_UGC"
 
   private static getContext(hl = "en", gl = "US") {
     return {
@@ -89,10 +85,7 @@ export class InnerTube {
 
   public static formatThumbnail(url?: string): string {
     if (!url) return ""
-    let formatted = url
-    if (formatted.startsWith("//")) {
-      formatted = `https:${formatted}`
-    }
+    let formatted = url.startsWith("//") ? `https:${url}` : url
     if (formatted.includes("=w") || formatted.includes("-w")) {
       formatted = formatted.replace(/([=-]w)\d+([=-]h)\d+.*/, "$11200$21200-c")
     } else if (formatted.includes("=s")) {
@@ -115,13 +108,13 @@ export class InnerTube {
     return runs.map((r) => r.text || "").join("").trim()
   }
 
-  // --- Search ---
-  public static async searchSongs(query: string): Promise<SongItem[]> {
-    const data = await this.request("search", {
-      query,
-      params: "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D",
-    })
+  // --- Search Songs & Videos ---
+  public static async searchSongs(query: string, filterVideos = false): Promise<Song[]> {
+    const params = filterVideos
+      ? "EgWKAQIQAWoKEAkQChAFEAMQBA%3D%3D" // Video filter
+      : "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D" // Song filter
 
+    const data = await this.request("search", { query, params })
     const tabs = data?.contents?.tabbedSearchResultsRenderer?.tabs || []
     const contents =
       tabs[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicShelfRenderer?.contents || []
@@ -132,7 +125,7 @@ export class InnerTube {
         if (!renderer) return null
         return this.parseMusicResponsiveListItem(renderer)
       })
-      .filter(Boolean) as SongItem[]
+      .filter(Boolean) as Song[]
   }
 
   public static async searchArtists(query: string): Promise<ArtistItem[]> {
@@ -276,7 +269,7 @@ export class InnerTube {
       data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer
         ?.contents || []
 
-    const topSongs: SongItem[] = []
+    const topSongs: Song[] = []
     const albums: AlbumItem[] = []
     const singles: AlbumItem[] = []
 
@@ -348,7 +341,10 @@ export class InnerTube {
       twoColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicResponsiveHeaderRenderer ||
       singleColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicResponsiveHeaderRenderer
 
-    const directHeader = data.header?.musicDetailHeaderRenderer || data.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer
+    const directHeader =
+      data.header?.musicDetailHeaderRenderer ||
+      data.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer ||
+      data.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicResponsiveHeaderRenderer
 
     const title =
       this.joinRuns(sectionHeader?.title?.runs) ||
@@ -378,7 +374,6 @@ export class InnerTube {
 
     const formattedThumb = this.formatThumbnail(thumbs[thumbs.length - 1]?.url)
 
-    // Check all possible shelf locations for songs
     let rawSongsList: any[] = []
 
     const secondaryContents = twoColumn?.secondaryContents?.sectionListRenderer?.contents || []
@@ -412,7 +407,7 @@ export class InnerTube {
       }
     }
 
-    const songs: SongItem[] = rawSongsList
+    const songs: Song[] = rawSongsList
       .map((item: any) => {
         const r = item.musicResponsiveListItemRenderer
         if (!r) return null
@@ -425,12 +420,21 @@ export class InnerTube {
           this.joinRuns(r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs) ||
           r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
 
+        // Extract duration from fixed column OR flex column
+        const fixedCol = r.fixedColumns?.[0]?.musicResponsiveListItemFixedColumnRenderer || r.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer
         const durationStr =
-          r.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text ||
-          r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[r.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs.length - 1]?.text
+          this.joinRuns(fixedCol?.text?.runs) ||
+          fixedCol?.text?.runs?.[0]?.text ||
+          r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[r.flexColumns[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.length - 1]?.text
 
         const itemThumb = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails
         const songThumbnail = itemThumb ? this.formatThumbnail(itemThumb[itemThumb.length - 1]?.url) : formattedThumb
+
+        const musicVideoType =
+          r.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint
+            ?.watchEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType ||
+          r.navigationEndpoint?.watchEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType ||
+          this.MUSIC_VIDEO_TYPE_ATV
 
         if (!videoId || !songTitle) return null
 
@@ -442,9 +446,11 @@ export class InnerTube {
           album: title,
           duration: this.parseDuration(durationStr),
           thumbnail: songThumbnail,
+          musicVideoType,
+          isVideoSong: musicVideoType !== this.MUSIC_VIDEO_TYPE_ATV,
         }
       })
-      .filter(Boolean) as SongItem[]
+      .filter(Boolean) as Song[]
 
     return {
       name: title,
@@ -460,11 +466,11 @@ export class InnerTube {
   }
 
   // --- Helper Item Parser ---
-  private static parseMusicResponsiveListItem(
+  public static parseMusicResponsiveListItem(
     renderer: any,
     fallbackArtist?: string,
     fallbackArtistId?: string | null
-  ): SongItem | null {
+  ): Song | null {
     const videoId =
       renderer.playlistItemData?.videoId ||
       renderer.navigationEndpoint?.watchEndpoint?.videoId ||
@@ -486,12 +492,19 @@ export class InnerTube {
     )
     const album = albumRun?.text || ""
 
-    const durationRun =
-      renderer.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text ||
+    const fixedCol = renderer.fixedColumns?.[0]?.musicResponsiveListItemFixedColumnRenderer || renderer.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer
+    const durationStr =
+      this.joinRuns(fixedCol?.text?.runs) ||
       secondLineRuns[secondLineRuns.length - 1]?.text
 
     const thumbs = renderer.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
     const thumbnail = this.formatThumbnail(thumbs[thumbs.length - 1]?.url)
+
+    const musicVideoType =
+      renderer.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint
+        ?.watchEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType ||
+      renderer.navigationEndpoint?.watchEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType ||
+      null
 
     if (!videoId || !title) return null
 
@@ -501,8 +514,10 @@ export class InnerTube {
       artist,
       artistId,
       album,
-      duration: this.parseDuration(durationRun),
+      duration: this.parseDuration(durationStr),
       thumbnail,
+      musicVideoType,
+      isVideoSong: musicVideoType !== null && musicVideoType !== this.MUSIC_VIDEO_TYPE_ATV,
     }
   }
 }
