@@ -1,5 +1,3 @@
-// Ported from InnerTube Kotlin engine (InnerTube.kt, YouTube.kt, models, and page extractors)
-
 export interface SongItem {
   videoId: string
   title: string
@@ -92,6 +90,9 @@ export class InnerTube {
   public static formatThumbnail(url?: string): string {
     if (!url) return ""
     let formatted = url
+    if (formatted.startsWith("//")) {
+      formatted = `https:${formatted}`
+    }
     if (formatted.includes("=w") || formatted.includes("-w")) {
       formatted = formatted.replace(/([=-]w)\d+([=-]h)\d+.*/, "$11200$21200-c")
     } else if (formatted.includes("=s")) {
@@ -102,16 +103,20 @@ export class InnerTube {
 
   public static parseDuration(timeStr?: string): number {
     if (!timeStr) return 0
-    const parts = timeStr.split(":").map((p) => parseInt(p, 10))
+    const parts = timeStr.trim().split(":").map((p) => parseInt(p, 10))
     if (parts.some(isNaN)) return 0
     if (parts.length === 2) return parts[0] * 60 + parts[1]
     if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
     return 0
   }
 
+  private static joinRuns(runs?: { text: string }[]): string {
+    if (!runs || !Array.isArray(runs)) return ""
+    return runs.map((r) => r.text || "").join("").trim()
+  }
+
   // --- Search ---
   public static async searchSongs(query: string): Promise<SongItem[]> {
-    // Search with Song Filter: EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D
     const data = await this.request("search", {
       query,
       params: "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D",
@@ -144,19 +149,19 @@ export class InnerTube {
       .map((item: any) => {
         const r = item.musicResponsiveListItemRenderer
         if (!r) return null
-        const name = r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
+        const name = this.joinRuns(r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs)
         const artistId =
           r.navigationEndpoint?.browseEndpoint?.browseId ||
           r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.navigationEndpoint
             ?.browseEndpoint?.browseId
         const thumbs = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
-        const subs = r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[2]?.text
+        const subs = this.joinRuns(r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs)
 
         if (!name || !artistId) return null
         return {
           artistId,
           name,
-          subscribers: subs || "Popular Artist",
+          subscribers: subs || "Artist",
           thumbnail: this.formatThumbnail(thumbs[thumbs.length - 1]?.url),
         }
       })
@@ -177,10 +182,14 @@ export class InnerTube {
       .map((item: any) => {
         const r = item.musicResponsiveListItemRenderer
         if (!r) return null
-        const title = r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
-        const albumId = r.navigationEndpoint?.browseEndpoint?.browseId
-        const artist = r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[2]?.text || ""
-        const year = r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[4]?.text
+        const title = this.joinRuns(r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs)
+        const albumId =
+          r.navigationEndpoint?.browseEndpoint?.browseId ||
+          r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.navigationEndpoint
+            ?.browseEndpoint?.browseId
+        const secondLineRuns = r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || []
+        const artist = secondLineRuns[2]?.text || secondLineRuns[0]?.text || "Unknown Artist"
+        const year = secondLineRuns[secondLineRuns.length - 1]?.text || ""
         const thumbs = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
 
         if (!title || !albumId) return null
@@ -195,29 +204,32 @@ export class InnerTube {
       .filter(Boolean) as AlbumItem[]
   }
 
-  // --- Explore / Browse ---
+  // --- Explore ---
   public static async explore() {
     const data = await this.request("browse", { browseId: "FEmusic_explore" })
     const sections =
       data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer
         ?.contents || []
 
-    let newReleaseAlbums: AlbumItem[] = []
+    const newReleaseAlbums: AlbumItem[] = []
     for (const section of sections) {
       const carousel = section.musicCarouselShelfRenderer
       if (carousel) {
         for (const item of carousel.contents || []) {
           const twoRow = item.musicTwoRowItemRenderer
           if (twoRow) {
-            const title = twoRow.title?.runs?.[0]?.text
+            const title = this.joinRuns(twoRow.title?.runs)
             const browseId = twoRow.navigationEndpoint?.browseEndpoint?.browseId
-            const artist = twoRow.subtitle?.runs?.[2]?.text || twoRow.subtitle?.runs?.[0]?.text || ""
+            const subtitleRuns = twoRow.subtitle?.runs || []
+            const artist = subtitleRuns[2]?.text || subtitleRuns[0]?.text || ""
+            const year = subtitleRuns[subtitleRuns.length - 1]?.text || ""
             const thumbs = twoRow.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
             if (title && browseId) {
               newReleaseAlbums.push({
                 albumId: browseId,
                 title,
                 artist,
+                year,
                 thumbnail: this.formatThumbnail(thumbs[thumbs.length - 1]?.url),
               })
             }
@@ -230,28 +242,35 @@ export class InnerTube {
 
   // --- Artist Page ---
   public static async getArtist(artistId: string): Promise<ArtistDetails> {
-    const data = await this.request("browse", { browseId: artistId })
+    const cleanId = artistId.trim()
+    const data = await this.request("browse", { browseId: cleanId })
 
     const header =
       data.header?.musicImmersiveHeaderRenderer ||
       data.header?.musicVisualHeaderRenderer ||
-      data.header?.musicHeaderRenderer
+      data.header?.musicHeaderRenderer ||
+      data.header?.musicDetailHeaderRenderer
 
-    const name = header?.title?.runs?.[0]?.text || "Unknown Artist"
-    const description =
-      data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.find(
-        (c: any) => c.musicDescriptionShelfRenderer
-      )?.musicDescriptionShelfRenderer?.description?.runs?.map((r: any) => r.text).join("") ||
-      header?.description?.runs?.map((r: any) => r.text).join("") || ""
+    const name = this.joinRuns(header?.title?.runs) || "Unknown Artist"
+
+    const descFromShelf = data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.find(
+      (c: any) => c.musicDescriptionShelfRenderer
+    )?.musicDescriptionShelfRenderer?.description?.runs
+
+    const description = this.joinRuns(descFromShelf || header?.description?.runs)
 
     const subscribers =
-      header?.subscriptionButton?.subscribeButtonRenderer?.subscriberCountWithSubscribeText?.runs?.[0]?.text ||
-      header?.subscriptionButton?.subscribeButtonRenderer?.longSubscriberCountText?.runs?.[0]?.text ||
-      header?.subscriptionButton?.subscribeButtonRenderer?.shortSubscriberCountText?.runs?.[0]?.text || ""
+      this.joinRuns(header?.subscriptionButton2?.subscribeButtonRenderer?.subscriberCountWithSubscribeText?.runs) ||
+      this.joinRuns(header?.subscriptionButton?.subscribeButtonRenderer?.longSubscriberCountText?.runs) ||
+      this.joinRuns(header?.subscriptionButton?.subscribeButtonRenderer?.shortSubscriberCountText?.runs) ||
+      this.joinRuns(header?.subtitle?.runs) ||
+      ""
 
     const headerThumbs =
       header?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
-      header?.foregroundThumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
+      header?.foregroundThumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
+      header?.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails ||
+      []
 
     const sections =
       data.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer
@@ -266,7 +285,7 @@ export class InnerTube {
       if (shelf) {
         for (const item of shelf.contents || []) {
           if (item.musicResponsiveListItemRenderer) {
-            const parsed = this.parseMusicResponsiveListItem(item.musicResponsiveListItemRenderer, name, artistId)
+            const parsed = this.parseMusicResponsiveListItem(item.musicResponsiveListItemRenderer, name, cleanId)
             if (parsed) topSongs.push(parsed)
           }
         }
@@ -274,13 +293,14 @@ export class InnerTube {
 
       const carousel = section.musicCarouselShelfRenderer
       if (carousel) {
-        const sectionTitle = carousel.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs?.[0]?.text?.toLowerCase() || ""
+        const sectionTitle = this.joinRuns(carousel.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs).toLowerCase()
         for (const item of carousel.contents || []) {
           const twoRow = item.musicTwoRowItemRenderer
           if (twoRow) {
-            const title = twoRow.title?.runs?.[0]?.text
+            const title = this.joinRuns(twoRow.title?.runs)
             const browseId = twoRow.navigationEndpoint?.browseEndpoint?.browseId
-            const year = twoRow.subtitle?.runs?.[twoRow.subtitle?.runs?.length - 1]?.text
+            const subtitleRuns = twoRow.subtitle?.runs || []
+            const year = subtitleRuns[subtitleRuns.length - 1]?.text
             const thumbs = twoRow.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails || []
             if (title && browseId) {
               const albumItem: AlbumItem = {
@@ -318,40 +338,81 @@ export class InnerTube {
 
   // --- Album Page ---
   public static async getAlbum(albumId: string): Promise<AlbumDetails> {
-    const data = await this.request("browse", {
-      browseId: albumId.startsWith("VL") ? albumId : `VL${albumId}`,
-    })
+    const cleanBrowseId = albumId.trim()
+    const data = await this.request("browse", { browseId: cleanBrowseId })
 
     const twoColumn = data.contents?.twoColumnBrowseResultsRenderer
     const singleColumn = data.contents?.singleColumnBrowseResultsRenderer
 
-    const header =
+    const sectionHeader =
       twoColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicResponsiveHeaderRenderer ||
-      singleColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicResponsiveHeaderRenderer ||
-      data.header?.musicDetailHeaderRenderer
+      singleColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicResponsiveHeaderRenderer
 
-    const name = header?.title?.runs?.[0]?.text || "Unknown Album"
+    const directHeader = data.header?.musicDetailHeaderRenderer || data.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer
+
+    const title =
+      this.joinRuns(sectionHeader?.title?.runs) ||
+      this.joinRuns(directHeader?.title?.runs) ||
+      "Unknown Album"
+
     const artist =
-      header?.straplineTextOne?.runs?.[0]?.text ||
-      header?.subtitle?.runs?.find((r: any) => r.navigationEndpoint?.browseEndpoint?.browseId)?.text ||
+      this.joinRuns(sectionHeader?.straplineTextOne?.runs) ||
+      this.joinRuns(directHeader?.subtitle?.runs?.filter((r: any) => r.navigationEndpoint?.browseEndpoint)) ||
+      directHeader?.subtitle?.runs?.[0]?.text ||
       "Unknown Artist"
+
     const artistId =
-      header?.straplineTextOne?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ||
-      header?.subtitle?.runs?.find((r: any) => r.navigationEndpoint?.browseEndpoint?.browseId)?.navigationEndpoint?.browseEndpoint?.browseId ||
+      sectionHeader?.straplineTextOne?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ||
+      directHeader?.subtitle?.runs?.find((r: any) => r.navigationEndpoint?.browseEndpoint?.browseId)?.navigationEndpoint?.browseEndpoint?.browseId ||
       null
-    const year = header?.subtitle?.runs?.[header?.subtitle?.runs?.length - 1]?.text
+
+    const subtitleRuns = sectionHeader?.subtitle?.runs || directHeader?.subtitle?.runs || []
+    const year = subtitleRuns[subtitleRuns.length - 1]?.text || ""
 
     const thumbs =
-      header?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
-      header?.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails || []
+      sectionHeader?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
+      directHeader?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
+      directHeader?.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails ||
+      data.background?.musicThumbnailRenderer?.thumbnail?.thumbnails ||
+      []
 
     const formattedThumb = this.formatThumbnail(thumbs[thumbs.length - 1]?.url)
 
-    const shelfContents =
-      twoColumn?.secondaryContents?.sectionListRenderer?.contents?.[0]?.musicPlaylistShelfRenderer?.contents ||
-      singleColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicShelfRenderer?.contents || []
+    // Check all possible shelf locations for songs
+    let rawSongsList: any[] = []
 
-    const songs: SongItem[] = shelfContents
+    const secondaryContents = twoColumn?.secondaryContents?.sectionListRenderer?.contents || []
+    for (const c of secondaryContents) {
+      if (c.musicShelfRenderer?.contents) rawSongsList.push(...c.musicShelfRenderer.contents)
+      if (c.musicPlaylistShelfRenderer?.contents) rawSongsList.push(...c.musicPlaylistShelfRenderer.contents)
+    }
+
+    const singleContents = singleColumn?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || []
+    for (const c of singleContents) {
+      if (c.musicShelfRenderer?.contents) rawSongsList.push(...c.musicShelfRenderer.contents)
+      if (c.musicPlaylistShelfRenderer?.contents) rawSongsList.push(...c.musicPlaylistShelfRenderer.contents)
+    }
+
+    // Fallback: If no songs embedded, resolve playlistId and fetch via VL playlist browse
+    if (rawSongsList.length === 0) {
+      const canonicalUrl = data.microformat?.microformatDataRenderer?.urlCanonical || ""
+      const playlistId = canonicalUrl.includes("list=")
+        ? canonicalUrl.substring(canonicalUrl.lastIndexOf("=") + 1)
+        : null
+
+      if (playlistId) {
+        try {
+          const playlistData = await this.request("browse", { browseId: `VL${playlistId}` })
+          const pSecondary = playlistData.contents?.twoColumnBrowseResultsRenderer?.secondaryContents?.sectionListRenderer?.contents || []
+          for (const c of pSecondary) {
+            if (c.musicPlaylistShelfRenderer?.contents) rawSongsList.push(...c.musicPlaylistShelfRenderer.contents)
+            if (c.musicShelfRenderer?.contents) rawSongsList.push(...c.musicShelfRenderer.contents)
+          }
+        } catch {}
+      }
+    }
+
+    const songs: SongItem[] = rawSongsList
       .map((item: any) => {
         const r = item.musicResponsiveListItemRenderer
         if (!r) return null
@@ -360,25 +421,33 @@ export class InnerTube {
           r.navigationEndpoint?.watchEndpoint?.videoId ||
           r.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId
 
-        const title = r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
-        const durationStr = r.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
+        const songTitle =
+          this.joinRuns(r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs) ||
+          r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
 
-        if (!videoId || !title) return null
+        const durationStr =
+          r.fixedColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text ||
+          r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[r.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs.length - 1]?.text
+
+        const itemThumb = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails
+        const songThumbnail = itemThumb ? this.formatThumbnail(itemThumb[itemThumb.length - 1]?.url) : formattedThumb
+
+        if (!videoId || !songTitle) return null
 
         return {
           videoId,
-          title,
+          title: songTitle,
           artist,
           artistId,
-          album: name,
+          album: title,
           duration: this.parseDuration(durationStr),
-          thumbnail: formattedThumb,
+          thumbnail: songThumbnail,
         }
       })
       .filter(Boolean) as SongItem[]
 
     return {
-      name,
+      name: title,
       artist,
       year,
       thumbnails: thumbs.map((t: any) => ({
@@ -390,7 +459,7 @@ export class InnerTube {
     }
   }
 
-  // --- Helper Parser ---
+  // --- Helper Item Parser ---
   private static parseMusicResponsiveListItem(
     renderer: any,
     fallbackArtist?: string,
@@ -402,7 +471,7 @@ export class InnerTube {
       renderer.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint
         ?.watchEndpoint?.videoId
 
-    const title = renderer.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text
+    const title = this.joinRuns(renderer.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs)
     const secondLineRuns = renderer.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || []
 
     const artistRun = secondLineRuns.find(
