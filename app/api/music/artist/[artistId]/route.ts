@@ -9,7 +9,7 @@ export async function GET(
   if (!artistId) return NextResponse.json({ error: "Artist ID required" }, { status: 400 })
 
   try {
-    const artistData = await InnerTube.getArtist(artistId)
+    const artistData = await InnerTube.getArtist(decodeURIComponent(artistId))
     return NextResponse.json(artistData)
   } catch (error: any) {
     console.error(`[InnerTube] Artist (${artistId}) error:`, error?.message || error)
