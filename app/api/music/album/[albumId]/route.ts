@@ -9,7 +9,7 @@ export async function GET(
   if (!albumId) return NextResponse.json({ error: "Album ID required" }, { status: 400 })
 
   try {
-    const albumData = await InnerTube.getAlbum(albumId)
+    const albumData = await InnerTube.getAlbum(decodeURIComponent(albumId))
     return NextResponse.json(albumData)
   } catch (error: any) {
     console.error(`[InnerTube] Album (${albumId}) error:`, error?.message || error)
