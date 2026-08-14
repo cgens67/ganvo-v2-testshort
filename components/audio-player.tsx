@@ -89,7 +89,7 @@ interface Playlist { id: string; name: string; songs: Song[]; }
 interface LyricLine { time: number; text: string; }
 interface LyricsData { syncedLyrics: LyricLine[] | null; plainLyrics: string | null; }
 
-const COLOR_THEMES =[
+const COLOR_THEMES = [
   { id: 'default', name: 'Default', primary: '', secondary: '#64748b' },
   { id: 'teal', name: 'Teal Wave', primary: '#14b8a6', secondary: '#0f766e' },
   { id: 'green', name: 'Green Apple', primary: '#22c55e', secondary: '#15803d' },
@@ -131,112 +131,109 @@ const SettingsRow = ({ icon: Icon, title, desc, onClick, children }: { icon: any
 )
 
 export function AudioPlayer() {
-  const[isDark, setIsDark] = useState(false)
-  const[isFullscreen, setIsFullscreen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   
-  const[searchQuery, setSearchQuery] = useState("")
-  const[searchResults, setSearchResults] = useState<Song[]>([])
-  const[searchSort, setSearchSort] = useState<'relevance' | 'az' | 'za'>('relevance')
-  const[isSearching, setIsSearching] = useState(false)
-  const[isSearchExpanded, setIsSearchExpanded] = useState(false)
-  const[searchHistory, setSearchHistory] = useState<string[]>([])
-  const[searchFocused, setSearchFocused] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Song[]>([])
+  const [searchSort, setSearchSort] = useState<'relevance' | 'az' | 'za'>('relevance')
+  const [isSearching, setIsSearching] = useState(false)
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+  const [searchHistory, setSearchHistory] = useState<string[]>([])
+  const [searchFocused, setSearchFocused] = useState(false)
   
-  const[queue, setQueue] = useState<Song[]>([])
-  const[currentIndex, setCurrentIndex] = useState(0)
+  const [queue, setQueue] = useState<Song[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const[currentTime, setCurrentTime] = useState(0)
-  const[duration, setDuration] = useState(0)
-  const[volume, setVolume] = useState(80)
-  const[isMuted, setIsMuted] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(80)
+  const [isMuted, setIsMuted] = useState(false)
   const [shuffle, setShuffle] = useState(false)
-  const[repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
-  const[isLoading, setIsLoading] = useState(false)
-  const[loadError, setLoadError] = useState<string | null>(null)
+  const [repeatMode, setRepeatMode] = useState<"off" | "all" | "one">("off")
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   
-  const[playbackRate, setPlaybackRate] = useState(1)
+  const [playbackRate, setPlaybackRate] = useState(1)
 
   const [lyrics, setLyrics] = useState<LyricsData | null>(null)
-  const[currentLyricIndex, setCurrentLyricIndex] = useState(-1)
+  const [currentLyricIndex, setCurrentLyricIndex] = useState(-1)
 
   const [activeTab, setActiveTab] = useState<'player' | 'explore' | 'queue' | 'lyrics' | 'library' | 'artist' | 'album' | 'playlistView'>('explore')
-  const[isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
-  const[mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
+  const [isMobilePlayerExpanded, setIsMobilePlayerExpanded] = useState(false)
+  const [mobilePlayerTab, setMobilePlayerTab] = useState<'player' | 'lyrics' | 'queue'>('player')
 
-  const[exploreData, setExploreData] = useState<{creatorsPicks: Song[], artists: any[], songs: Song[], albums: any[]}>({creatorsPicks:[], artists:[], songs: [], albums:[]})
-  const[isExploreLoading, setIsExploreLoading] = useState(true)
-  const[exploreError, setExploreError] = useState(false)
+  const [exploreData, setExploreData] = useState<{creatorsPicks: Song[], artists: any[], songs: Song[], albums: any[]}>({creatorsPicks:[], artists:[], songs: [], albums:[]})
+  const [isExploreLoading, setIsExploreLoading] = useState(true)
+  const [exploreError, setExploreError] = useState(false)
   
-  const[currentArtistData, setCurrentArtistData] = useState<any>(null)
-  const[isArtistLoading, setIsArtistLoading] = useState(false)
-  const[currentAlbumData, setCurrentAlbumData] = useState<any>(null)
-  const[isAlbumLoading, setIsAlbumLoading] = useState(false)
-  const[currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
+  const [currentArtistData, setCurrentArtistData] = useState<any>(null)
+  const [isArtistLoading, setIsArtistLoading] = useState(false)
+  const [currentAlbumData, setCurrentAlbumData] = useState<any>(null)
+  const [isAlbumLoading, setIsAlbumLoading] = useState(false)
+  const [currentPlaylistView, setCurrentPlaylistView] = useState<Playlist | null>(null)
 
-  const[showAboutDialog, setShowAboutDialog] = useState(false)
-  const[showCreditsDialog, setShowCreditsDialog] = useState(false)
-  const[showAccountSettings, setShowAccountSettings] = useState(false) 
-  const[showPlayerSettings, setShowPlayerSettings] = useState(false) 
-  const[showPlaylistDialog, setShowPlaylistDialog] = useState(false)
-  const[showColorPalette, setShowColorPalette] = useState(false)
+  const [showAboutDialog, setShowAboutDialog] = useState(false)
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false)
+  const [showAccountSettings, setShowAccountSettings] = useState(false) 
+  const [showPlayerSettings, setShowPlayerSettings] = useState(false) 
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false)
+  const [showColorPalette, setShowColorPalette] = useState(false)
   
-  const[showCustomThemeDialog, setShowCustomThemeDialog] = useState(false)
-  const[showImportThemeDialog, setShowImportThemeDialog] = useState(false)
-  const[tempPrimaryColor, setTempPrimaryColor] = useState('#14b8a6')
-  const[tempSecondaryColor, setTempSecondaryColor] = useState('#0f766e')
-  const[importThemeString, setImportThemeString] = useState("")
-  const[customThemeColors, setCustomThemeColors] = useState({ primary: '#14b8a6', secondary: '#0f766e' })
+  const [showCustomThemeDialog, setShowCustomThemeDialog] = useState(false)
+  const [showImportThemeDialog, setShowImportThemeDialog] = useState(false)
+  const [tempPrimaryColor, setTempPrimaryColor] = useState('#14b8a6')
+  const [tempSecondaryColor, setTempSecondaryColor] = useState('#0f766e')
+  const [importThemeString, setImportThemeString] = useState("")
+  const [customThemeColors, setCustomThemeColors] = useState({ primary: '#14b8a6', secondary: '#0f766e' })
 
-  const[newPlaylistName, setNewPlaylistName] = useState("")
+  const [newPlaylistName, setNewPlaylistName] = useState("")
   
-  const[colorTheme, setColorTheme] = useState('default')
-  const[playerStyle, setPlayerStyle] = useState<'Classic' | 'Open' | 'Modern' | 'Minimal' | 'Cinematic' | 'Expressive' | 'Immersive'>('Classic')
+  const [colorTheme, setColorTheme] = useState('default')
+  const [playerStyle, setPlayerStyle] = useState<'Classic' | 'Open' | 'Modern' | 'Minimal' | 'Cinematic' | 'Expressive' | 'Immersive'>('Classic')
 
-  const[dynamicTheme, setDynamicTheme] = useState(true)
-  const[playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
-  const[thumbnailRadius, setThumbnailRadius] = useState(32)
-  const[dominantColor, setDominantColor] = useState<string | null>(null)
-  const[lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
-  const[lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
-  const[audioQuality, setAudioQuality] = useState<'High' | 'Standard' | 'Low'>('High')
-  const[autoPlaySimilar, setAutoPlaySimilar] = useState(false)
+  const [dynamicTheme, setDynamicTheme] = useState(true)
+  const [playerBgStyle, setPlayerBgStyle] = useState<'Theme' | 'Gradient' | 'Blur'>('Gradient')
+  const [thumbnailRadius, setThumbnailRadius] = useState(32)
+  const [dominantColor, setDominantColor] = useState<string | null>(null)
+  const [lyricsProvider, setLyricsProvider] = useState<'lrclib' | 'kugou'>('lrclib')
+  const [lyricsSize, setLyricsSize] = useState<'Normal' | 'Large' | 'Extra Large'>('Normal')
+  const [audioQuality, setAudioQuality] = useState<'High' | 'Standard' | 'Low'>('High')
+  const [autoPlaySimilar, setAutoPlaySimilar] = useState(false)
   
-  // Expanded Settings State
-  const[autoScrollLyrics, setAutoScrollLyrics] = useState(true)
-  const[lyricsAlignment, setLyricsAlignment] = useState<'Left' | 'Center' | 'Right'>('Center')
-  const[lyricsGlass, setLyricsGlass] = useState(false)
-  const[hideCreatorsPicks, setHideCreatorsPicks] = useState(false)
-  const[compactQueue, setCompactQueue] = useState(false)
-  const[autoSwitchToPlayer, setAutoSwitchToPlayer] = useState(true)
-  const[saveSearchHistory, setSaveSearchHistory] = useState(true)
-  const[reduceMotion, setReduceMotion] = useState(false)
-  const[autoOpenLyrics, setAutoOpenLyrics] = useState(false)
+  const [autoScrollLyrics, setAutoScrollLyrics] = useState(true)
+  const [lyricsAlignment, setLyricsAlignment] = useState<'Left' | 'Center' | 'Right'>('Center')
+  const [lyricsGlass, setLyricsGlass] = useState(false)
+  const [hideCreatorsPicks, setHideCreatorsPicks] = useState(false)
+  const [compactQueue, setCompactQueue] = useState(false)
+  const [autoSwitchToPlayer, setAutoSwitchToPlayer] = useState(true)
+  const [saveSearchHistory, setSaveSearchHistory] = useState(true)
+  const [reduceMotion, setReduceMotion] = useState(false)
+  const [autoOpenLyrics, setAutoOpenLyrics] = useState(false)
 
-  // 10 New App Settings Added
-  const[disableAnimations, setDisableAnimations] = useState(false)
-  const[disableBlur, setDisableBlur] = useState(false)
-  const[showTimeRemaining, setShowTimeRemaining] = useState(false)
-  const[showPlaybackSpeed, setShowPlaybackSpeed] = useState(false)
-  const[normalizeVolume, setNormalizeVolume] = useState(true)
-  const[skipSilence, setSkipSilence] = useState(false)
-  const[crossfade, setCrossfade] = useState(false)
-  const[stopAfterCurrent, setStopAfterCurrent] = useState(false)
-  const[dataSaver, setDataSaver] = useState(false)
-  const[privateSession, setPrivateSession] = useState(false)
+  const [disableAnimations, setDisableAnimations] = useState(false)
+  const [disableBlur, setDisableBlur] = useState(false)
+  const [showTimeRemaining, setShowTimeRemaining] = useState(false)
+  const [showPlaybackSpeed, setShowPlaybackSpeed] = useState(false)
+  const [normalizeVolume, setNormalizeVolume] = useState(true)
+  const [skipSilence, setSkipSilence] = useState(false)
+  const [crossfade, setCrossfade] = useState(false)
+  const [stopAfterCurrent, setStopAfterCurrent] = useState(false)
+  const [dataSaver, setDataSaver] = useState(false)
+  const [privateSession, setPrivateSession] = useState(false)
   
-  const[showAuthDialog, setShowAuthDialog] = useState(false)
-  const[user, setUser] = useState<FirebaseUser | null>(null)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [user, setUser] = useState<FirebaseUser | null>(null)
   const [email, setEmail] = useState("")
-  const[password, setPassword] = useState("")
+  const [password, setPassword] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
   const [authError, setAuthError] = useState("")
-  const[displayNameInput, setDisplayNameInput] = useState("")
+  const [displayNameInput, setDisplayNameInput] = useState("")
   
   const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set())
-  const[savedSongs, setSavedSongs] = useState<Song[]>([])
-  const[playlists, setPlaylists] = useState<Playlist[]>([])
+  const [savedSongs, setSavedSongs] = useState<Song[]>([])
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
 
-  // YT IFrame Engine Refs
   const ytParentRef = useRef<HTMLDivElement>(null)
   const ytPlayerRef = useRef<any>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -270,7 +267,6 @@ export function AudioPlayer() {
     return "text-center origin-center"
   }
 
-  // Safely sample images while ensuring dead references are flushed
   useEffect(() => {
     let isActive = true;
     if (!currentSong?.thumbnail || playerBgStyle === 'Theme') {
@@ -308,7 +304,7 @@ export function AudioPlayer() {
       isActive = false; 
       img.onload = null; 
     }
-  },[currentSong?.thumbnail, playerBgStyle])
+  }, [currentSong?.thumbnail, playerBgStyle])
 
   const applyAudioEffects = useCallback(() => {
     if (ytPlayerRef.current?.setPlaybackRate) {
@@ -332,7 +328,7 @@ export function AudioPlayer() {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  },[])
+  }, [])
 
   useEffect(() => {
     try {
@@ -401,7 +397,7 @@ export function AudioPlayer() {
       })
       .catch(() => setExploreError(true))
       .finally(() => setIsExploreLoading(false))
-  },[])
+  }, [])
 
   useEffect(() => {
     if (!auth || !db) return
@@ -416,8 +412,8 @@ export function AudioPlayer() {
           const localSaved = JSON.parse(localStorage.getItem('ganvo_saved_songs') || '[]')
           const localPlaylists = JSON.parse(localStorage.getItem('ganvo_playlists') || '[]')
           
-          const combinedSaved =[...(data.savedSongs || []), ...localSaved].filter((v,i,a) => a.findIndex(t => (t.videoId === v.videoId)) === i)
-          const combinedPlaylists =[...(data.playlists || []), ...localPlaylists].filter((v,i,a) => a.findIndex(t => (t.id === v.id)) === i)
+          const combinedSaved = [...(data.savedSongs || []), ...localSaved].filter((v,i,a) => a.findIndex(t => (t.videoId === v.videoId)) === i)
+          const combinedPlaylists = [...(data.playlists || []), ...localPlaylists].filter((v,i,a) => a.findIndex(t => (t.id === v.id)) === i)
           
           setSavedSongs(combinedSaved)
           setLikedSongs(new Set(combinedSaved.map((s: Song) => s.videoId)))
@@ -425,7 +421,7 @@ export function AudioPlayer() {
           
           await setDoc(userRef, { savedSongs: combinedSaved, playlists: combinedPlaylists }, { merge: true })
         } else {
-          await setDoc(userRef, { savedSongs:[], playlists:[] })
+          await setDoc(userRef, { savedSongs: [], playlists: [] })
         }
       } else {
         const saved = localStorage.getItem('ganvo_saved_songs')
@@ -443,7 +439,7 @@ export function AudioPlayer() {
       }
     })
     return () => unsubscribe()
-  },[])
+  }, [])
 
   const syncToCloud = async (newSaved: Song[], newPlaylists: Playlist[]) => {
     localStorage.setItem('ganvo_saved_songs', JSON.stringify(newSaved))
@@ -498,8 +494,8 @@ export function AudioPlayer() {
   const handleCreatePlaylist = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newPlaylistName.trim()) return
-    const newPlaylist: Playlist = { id: Date.now().toString(), name: newPlaylistName.trim(), songs:[] }
-    const updatedPlaylists =[...playlists, newPlaylist]
+    const newPlaylist: Playlist = { id: Date.now().toString(), name: newPlaylistName.trim(), songs: [] }
+    const updatedPlaylists = [...playlists, newPlaylist]
     setPlaylists(updatedPlaylists)
     syncToCloud(savedSongs, updatedPlaylists)
     setNewPlaylistName("")
@@ -511,7 +507,7 @@ export function AudioPlayer() {
     const updatedPlaylists = playlists.map(p => {
       if (p.id === playlistId) {
         if (!p.songs.find(s => s.videoId === song.videoId)) {
-          return { ...p, songs:[...p.songs, song] }
+          return { ...p, songs: [...p.songs, song] }
         }
       }
       return p
@@ -576,7 +572,7 @@ export function AudioPlayer() {
     setCurrentArtistData(null)
     setIsMobilePlayerExpanded(false)
     try {
-      const res = await fetch(`/api/music/artist/${artistId}`)
+      const res = await fetch(`/api/music/artist/${encodeURIComponent(artistId)}`)
       const data = await res.json()
       if (data && !data.error) setCurrentArtistData(data)
     } catch (e) {} finally { setIsArtistLoading(false) }
@@ -588,7 +584,7 @@ export function AudioPlayer() {
     setCurrentAlbumData(null)
     setIsMobilePlayerExpanded(false)
     try {
-      const res = await fetch(`/api/music/album/${albumId}`)
+      const res = await fetch(`/api/music/album/${encodeURIComponent(albumId)}`)
       const data = await res.json()
       if (data && !data.error) setCurrentAlbumData(data)
     } catch (e) {} finally { setIsAlbumLoading(false) }
@@ -602,7 +598,7 @@ export function AudioPlayer() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark)
-  },[isDark])
+  }, [isDark])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -614,7 +610,7 @@ export function AudioPlayer() {
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  },[])
+  }, [])
 
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
@@ -628,14 +624,14 @@ export function AudioPlayer() {
       try {
         const response = await fetch(`/api/music/search?q=${encodeURIComponent(searchQuery)}`)
         const data = await response.json()
-        setSearchResults(data.results ||[])
+        setSearchResults(data.results || [])
       } catch (error) {} finally { setIsSearching(false) }
     }, 300)
 
     return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current) }
-  },[searchQuery])
+  }, [searchQuery])
 
-  const sortedSearchResults =[...searchResults].sort((a, b) => {
+  const sortedSearchResults = [...searchResults].sort((a, b) => {
     if (searchSort === 'az') return a.title.localeCompare(b.title)
     if (searchSort === 'za') return b.title.localeCompare(a.title)
     return 0
@@ -644,7 +640,7 @@ export function AudioPlayer() {
   const addToQueueAndPlay = async (song: Song) => {
     const saveSearchStr = searchQuery || song.title
     if (saveSearchStr.trim() && saveSearchHistory && !privateSession) {
-      const newHistory =[saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
+      const newHistory = [saveSearchStr, ...searchHistory.filter(q => q !== saveSearchStr)].slice(0, 15)
       setSearchHistory(newHistory)
       localStorage.setItem('ganvo_search_history', JSON.stringify(newHistory))
     }
@@ -656,7 +652,6 @@ export function AudioPlayer() {
       setMobilePlayerTab('lyrics');
     }
     
-    // Check if the current queued song array contains our requested track natively already.
     const existingIndex = queue.findIndex((s) => s.videoId === song.videoId)
     
     if (existingIndex >= 0) {
@@ -669,7 +664,7 @@ export function AudioPlayer() {
         setCurrentIndex(existingIndex);
       }
     } else {
-      setQueue((prev) =>[...prev, song])
+      setQueue((prev) => [...prev, song])
       setCurrentIndex(queue.length)
     }
     setSearchResults([])
@@ -678,10 +673,8 @@ export function AudioPlayer() {
     setSearchFocused(false)
   }
 
-
   const playFromLibrary = (song: Song) => addToQueueAndPlay(song)
 
-  // ======== NATIVE YT IFRAME MOUNTING ======== //
   useEffect(() => {
     handleEndedRef.current = async () => {
       if (stopAfterCurrent) {
@@ -701,9 +694,9 @@ export function AudioPlayer() {
           try {
             const res = await fetch(`/api/music/search?q=${encodeURIComponent(currentSong.artist + ' ' + currentSong.title)}`);
             const data = await res.json();
-            const similar = (data.results ||[]).filter((s: Song) => !queue.find(q => q.videoId === s.videoId));
+            const similar = (data.results || []).filter((s: Song) => !queue.find(q => q.videoId === s.videoId));
             if (similar.length > 0) {
-              setQueue(prev =>[...prev, similar[0]]);
+              setQueue(prev => [...prev, similar[0]]);
               setCurrentIndex(queue.length);
             } else setIsPlaying(false);
           } catch {
@@ -724,14 +717,13 @@ export function AudioPlayer() {
     const initPlayer = () => {
       if (!ytParentRef.current || !isMounted) return;
       
-      // Isolate React's virtual DOM from Google API overwriting the Div
       const playerDiv = document.createElement('div');
       ytParentRef.current.innerHTML = '';
       ytParentRef.current.appendChild(playerDiv);
 
       ytPlayerRef.current = new (window as any).YT.Player(playerDiv, {
         height: '1', width: '1',
-        videoId: currentSong?.videoId || '', // Explicit payload bypass origin
+        videoId: currentSong?.videoId || '',
         playerVars: { playsinline: 1, controls: 0, disablekb: 1 },
         events: {
           onReady: (event: any) => {
@@ -791,7 +783,7 @@ export function AudioPlayer() {
       }
       if (ytParentRef.current) ytParentRef.current.innerHTML = '';
     };
-  },[]);
+  }, []);
 
   useEffect(() => {
     if (isPlaying) {
@@ -807,7 +799,7 @@ export function AudioPlayer() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  },[isPlaying]);
+  }, [isPlaying]);
 
   useEffect(() => {
     if (currentSong && ytPlayerRef.current && ytPlayerRef.current.loadVideoById) {
@@ -817,7 +809,7 @@ export function AudioPlayer() {
       ytPlayerRef.current.loadVideoById(currentSong.videoId);
       ytPlayerRef.current.playVideo();
     }
-  },[currentSong?.videoId]);
+  }, [currentSong?.videoId]);
   
   useEffect(() => {
     if (!currentSong) {
@@ -827,14 +819,12 @@ export function AudioPlayer() {
       setIsPlaying(false);
       setCurrentTime(0);
     }
-  },[currentSong]);
+  }, [currentSong]);
 
   useEffect(() => {
     if (ytPlayerRef.current && ytPlayerRef.current.setVolume) ytPlayerRef.current.setVolume(volume);
     if (ytPlayerRef.current && ytPlayerRef.current.mute) isMuted ? ytPlayerRef.current.mute() : ytPlayerRef.current.unMute();
-  },[volume, isMuted]);
-
-  // ============================================================== //
+  }, [volume, isMuted]);
 
   useEffect(() => {
     if (!currentSong) return
@@ -857,7 +847,7 @@ export function AudioPlayer() {
       } catch (error) { setLyrics({ syncedLyrics: null, plainLyrics: null }) }
     }
     loadLyrics()
-  },[currentSong?.videoId, lyricsProvider])
+  }, [currentSong?.videoId, lyricsProvider])
 
   useEffect(() => {
     if (!lyrics?.syncedLyrics) return
@@ -879,7 +869,7 @@ export function AudioPlayer() {
         }, 50)
       }
     }
-  },[currentTime, lyrics, currentLyricIndex, autoScrollLyrics])
+  }, [currentTime, lyrics, currentLyricIndex, autoScrollLyrics])
 
   const playNext = useCallback(() => {
     if (queue.length === 0) return
@@ -890,14 +880,14 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex(nextIndex)
-  },[queue.length, currentIndex, shuffle, repeatMode])
+  }, [queue.length, currentIndex, shuffle, repeatMode])
 
   const togglePlay = useCallback(() => {
     if (!ytPlayerRef.current) return
     if (isPlaying) ytPlayerRef.current.pauseVideo()
     else ytPlayerRef.current.playVideo()
     setIsPlaying(!isPlaying)
-  },[isPlaying])
+  }, [isPlaying])
 
   const playPrevious = useCallback(() => {
     if (queue.length === 0) return
@@ -906,7 +896,7 @@ export function AudioPlayer() {
       return
     }
     setCurrentIndex((currentIndex - 1 + queue.length) % queue.length)
-  },[queue.length, currentIndex, currentTime])
+  }, [queue.length, currentIndex, currentTime])
 
   const handleSeek = (value: number[]) => {
     if (ytPlayerRef.current && ytPlayerRef.current.seekTo) {
@@ -939,7 +929,7 @@ export function AudioPlayer() {
   const toggleLike = async (song: Song) => {
     setLikedSongs((prev) => {
       const next = new Set(prev)
-      let newSaved =[...savedSongs]
+      let newSaved = [...savedSongs]
       if (next.has(song.videoId)) {
         next.delete(song.videoId)
         newSaved = newSaved.filter(s => s.videoId !== song.videoId)
@@ -991,7 +981,6 @@ export function AudioPlayer() {
     </DropdownMenuContent>
   )
 
-  // MOBILE PLAYER RENDERING STRATEGIES
   const renderClassicPlayer = () => (
     <div className="flex flex-col items-center min-h-full py-4 w-full max-w-[480px] animate-in fade-in zoom-in-95 duration-500 relative m-auto">
       <div className="w-full max-w-[320px] aspect-square mx-auto overflow-hidden shadow-2xl relative mb-8 shrink-0 flex items-center justify-center" style={{ borderRadius: `${thumbnailRadius}px` }}>
@@ -1156,7 +1145,6 @@ export function AudioPlayer() {
         </div>
       </div>
       
-      {/* Modern Control Pill */}
       <div className="flex items-center gap-2 bg-primary/10 dark:bg-primary/20 rounded-[3rem] p-3 mx-6 w-[calc(100%-3rem)]">
          <Button variant="ghost" onClick={playPrevious} className="flex-1 h-20 rounded-[2.5rem] text-primary hover:bg-primary/20"><SkipBack className="text-[36px]"/></Button>
          <Button onClick={togglePlay} className="h-24 w-28 shrink-0 rounded-[2.5rem] bg-foreground text-background shadow-xl hover:scale-105 transition-transform active:scale-95">
@@ -1394,7 +1382,6 @@ export function AudioPlayer() {
   return (
     <div className="flex h-screen flex-col overflow-hidden font-sans relative z-0 bg-background transition-colors duration-1000">
       
-      {/* Global CSS Injections for Themes and Settings */}
       {colorTheme !== 'default' && (
         <style dangerouslySetInnerHTML={{__html: `
           :root, .dark {
@@ -1460,7 +1447,6 @@ export function AudioPlayer() {
         </div>
       )}
 
-      {/* Header Layout Optimized */}
       <header className="elevation-1 z-40 flex h-16 flex-shrink-0 items-center justify-between px-3 md:px-6 transition-all duration-500 ease-out relative bg-background/90 backdrop-blur-xl border-b border-border/40 gap-2">
         <div className={cn(
           "flex items-center shrink-0 transition-all duration-500 ease-[cubic-bezier(0.2,0,0,1)] origin-left whitespace-nowrap overflow-hidden", 
@@ -1504,7 +1490,6 @@ export function AudioPlayer() {
             )}
           </div>
 
-          {/* Search Dropdown max width container resolved */}
           {showSearchDropdown && (
             <div className="absolute left-0 right-0 top-full z-[60] mt-3 flex flex-col overflow-hidden rounded-[1.5rem] border bg-card shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 ease-out max-w-full">
               <div className={cn("flex-1 overflow-y-auto min-h-0 overscroll-contain transition-all duration-500", isSearchExpanded ? "max-h-[70vh]" : "max-h-[400px]")}>
@@ -1534,11 +1519,11 @@ export function AudioPlayer() {
                         </Select>
                       </div>
                       {sortedSearchResults.slice(0, isSearchExpanded ? undefined : 6).map((song, index) => (
-                        <button key={song.videoId} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToQueueAndPlay(song) }} className={cn("song-card active:scale-[0.98] flex w-full items-center gap-4 rounded-[1.25rem] p-3 text-left hover:bg-secondary/60 text-foreground", !reduceMotion && "transition-all duration-300 ease-out")} style={{ animationDelay: `${index * 30}ms` }}>
-                          <img src={song.thumbnail || "/placeholder.svg"} alt={song.title} className={cn("aspect-square h-14 w-14 rounded-xl object-cover shadow-sm", !reduceMotion && "transition-transform duration-500 hover:scale-110")} />
-                          <div className="flex-1 overflow-hidden">
-                            <p className="truncate font-bold leading-tight text-foreground">{song.title}</p>
-                            <p className="truncate text-sm font-medium text-muted-foreground mt-1">{song.artist} {song.album && `• ${song.album}`}</p>
+                        <button key={song.videoId} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToQueueAndPlay(song) }} className={cn("song-card active:scale-[0.98] flex w-full items-center gap-3 sm:gap-4 rounded-[1.25rem] p-3 text-left hover:bg-secondary/60 text-foreground", !reduceMotion && "transition-all duration-300 ease-out")} style={{ animationDelay: `${index * 30}ms` }}>
+                          <img src={song.thumbnail || "/placeholder.svg"} alt={song.title} className={cn("aspect-square h-12 w-12 sm:h-14 sm:w-14 rounded-xl object-cover shadow-sm shrink-0", !reduceMotion && "transition-transform duration-500 hover:scale-110")} />
+                          <div className="flex-1 min-w-0 pr-2">
+                            <p className="truncate font-bold leading-tight text-foreground text-sm sm:text-base">{song.title}</p>
+                            <p className="truncate text-xs sm:text-sm font-medium text-muted-foreground mt-1">{song.artist} {song.album && `• ${song.album}`}</p>
                           </div>
                           <span className="flex-shrink-0 text-xs font-bold text-muted-foreground/80 tracking-widest">{formatTime(song.duration)}</span>
                         </button>
@@ -1558,7 +1543,6 @@ export function AudioPlayer() {
           )}
         </div>
 
-        {/* Right side Profile Header Interface */}
         <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
           <Button variant="ghost" size="icon" onClick={toggleFullscreen} className={cn("hidden sm:flex h-10 w-10 rounded-full text-foreground hover:bg-muted active:scale-90 outline-none focus:outline-none focus-visible:outline-none", !reduceMotion && "transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110")}>
             {isFullscreen ? <Minimize className="h-5 w-5 fill-current" /> : <Maximize className="h-5 w-5 fill-current" />}
@@ -1613,7 +1597,7 @@ export function AudioPlayer() {
         </div>
       </header>
 
-      {/* Center Explore Feed Core Logic Data  */}
+      {/* Main Content View */}
       <div className="flex flex-1 overflow-hidden min-h-0 bg-transparent relative">
         <div className="flex flex-1 flex-col overflow-y-auto min-h-0 z-10 pb-40 lg:pb-0 transition-all duration-500 ease-out">
           {activeTab === 'explore' ? (
@@ -1666,15 +1650,15 @@ export function AudioPlayer() {
                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><TrendingUp className="h-6 w-6 text-primary"/> Top Songs</h3>
                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                           {exploreData.songs.slice(0, 9).map((song, idx) => (
-                            <div key={idx} className="group flex items-center gap-4 p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out bg-card shadow-sm border border-border/40">
-                              <img src={song.thumbnail} className={cn("aspect-square h-16 w-16 rounded-[1rem] object-cover shadow-sm", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
+                            <div key={idx} className="group flex items-center gap-3 sm:gap-4 p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out bg-card shadow-sm border border-border/40">
+                              <img src={song.thumbnail} className={cn("aspect-square h-14 w-14 sm:h-16 sm:w-16 rounded-[1rem] object-cover shadow-sm shrink-0", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
                               <div className="flex-1 min-w-0 pr-2">
-                                <p className="font-bold text-base truncate text-foreground">{song.title}</p>
-                                <p className="text-sm font-semibold text-muted-foreground truncate mt-0.5">{song.artist}</p>
+                                <p className="font-bold text-sm sm:text-base truncate text-foreground leading-tight">{song.title}</p>
+                                <p className="text-xs sm:text-sm font-semibold text-muted-foreground truncate mt-1">{song.artist}</p>
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none"><ListPlus className="h-5 w-5 text-current" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none shrink-0"><ListPlus className="h-5 w-5 text-current" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                                   <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
@@ -1683,8 +1667,8 @@ export function AudioPlayer() {
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
-                              <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 text-foreground h-12 w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0 shadow-md">
-                                <Play className="text-[24px] translate-x-[1px]"/>
+                              <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 text-foreground h-11 w-11 sm:h-12 sm:w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0 shadow-md shrink-0">
+                                <Play className="text-[22px] sm:text-[24px] translate-x-[1px]"/>
                               </Button>
                             </div>
                           ))}
@@ -1700,7 +1684,7 @@ export function AudioPlayer() {
                             </div>
                             <div className="px-2">
                               <p className="font-extrabold text-base truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
-                              <p className="text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wider">{album.artist} • {album.year}</p>
+                              <p className="text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wider truncate">{album.artist} • {album.year}</p>
                             </div>
                           </div>
                         ))}
@@ -1717,44 +1701,46 @@ export function AudioPlayer() {
                 ) : currentArtistData ? (
                   <div className="animate-in fade-in duration-500">
                     <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 mb-12 p-6 md:p-10 bg-card/50 rounded-[3rem] border shadow-sm backdrop-blur-sm">
-                      <img src={currentArtistData.thumbnails?.[currentArtistData.thumbnails.length-1]?.url || "/placeholder.svg"} alt={currentArtistData.name} className="aspect-square w-48 h-48 md:w-64 md:h-64 rounded-full object-cover shadow-2xl" />
-                      <div className="text-center md:text-left flex-1 flex flex-col justify-center">
+                      <img src={currentArtistData.thumbnails?.[currentArtistData.thumbnails.length-1]?.url || "/placeholder.svg"} alt={currentArtistData.name} className="aspect-square w-48 h-48 md:w-64 md:h-64 rounded-full object-cover shadow-2xl shrink-0" />
+                      <div className="text-center md:text-left flex-1 flex flex-col justify-center min-w-0">
                         <div className="flex items-center justify-center md:justify-start gap-2 text-primary font-bold text-sm mb-3 uppercase tracking-[0.2em]"><MicVocal className="h-5 w-5 text-current"/> Artist</div>
-                        <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 text-foreground">{currentArtistData.name}</h1>
+                        <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 text-foreground truncate">{currentArtistData.name}</h1>
                         <p className="text-muted-foreground font-semibold mb-6 text-xl">{currentArtistData.subscribers}</p>
-                        <p className="text-base leading-relaxed max-w-3xl text-muted-foreground/90 line-clamp-3 md:line-clamp-none font-medium">{currentArtistData.description}</p>
+                        {currentArtistData.description && <p className="text-base leading-relaxed max-w-3xl text-muted-foreground/90 line-clamp-3 md:line-clamp-none font-medium">{currentArtistData.description}</p>}
                       </div>
                     </div>
                     
                     <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground"><TrendingUp className="h-6 w-6 text-primary"/> Top Songs</h3>
                     <div className="space-y-2 mb-14 bg-card p-3 md:p-6 rounded-[2.5rem] border shadow-sm">
                       {currentArtistData.topSongs?.map((song: any, idx: number) => (
-                        <div key={song.videoId} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
-                          <span className="w-8 text-center font-bold text-muted-foreground/50">{idx + 1}</span>
-                          <img src={song.thumbnail} className={cn("aspect-square h-14 w-14 rounded-[1rem] object-cover shadow-sm", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
-                          <div className="flex-1 min-w-0 pr-2">
-                            <p className="font-bold text-base truncate text-foreground">{song.title}</p>
-                            <p className="text-sm font-medium text-muted-foreground truncate mt-0.5">{song.album}</p>
+                        <div key={song.videoId || idx} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
+                          <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm text-muted-foreground/50 shrink-0">{idx + 1}</span>
+                          <img src={song.thumbnail} className={cn("aspect-square h-12 w-12 sm:h-14 sm:w-14 rounded-[1rem] object-cover shadow-sm shrink-0", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
+                          <div className="flex-1 min-w-0 px-2">
+                            <p className="font-bold text-sm sm:text-base truncate text-foreground leading-tight">{song.title}</p>
+                            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate mt-0.5">{song.album || song.artist}</p>
                           </div>
                           
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none"><ListPlus className="h-6 w-6 text-current" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
-                              <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
-                              {playlists.map(pl => (
-                                <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-full text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none"><ListPlus className="h-5 w-5 sm:h-6 sm:w-6 text-current" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
+                                <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
+                                {playlists.map(pl => (
+                                  <DropdownMenuItem key={pl.id} onClick={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="h-4 w-4 mr-3 text-primary"/>{pl.name}</DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
 
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-12 w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
-                            <Play className="text-[20px] translate-x-[1px]"/>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-12 w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
-                            <Heart className={cn("h-6 w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
-                          </Button>
+                            <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-10 w-10 sm:h-12 sm:w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
+                              <Play className="text-[18px] sm:text-[20px] translate-x-[1px]"/>
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-10 w-10 sm:h-12 sm:w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                              <Heart className={cn("h-5 w-5 sm:h-6 sm:w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1769,7 +1755,7 @@ export function AudioPlayer() {
                                 </div>
                                 <div className="px-2">
                                   <p className="font-extrabold text-base truncate text-foreground group-hover:text-primary transition-colors">{album.title}</p>
-                                  <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground mt-1">{album.year}</p>
+                                  <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground mt-1 truncate">{album.year}</p>
                                 </div>
                               </div>
                             ))}
@@ -1787,7 +1773,7 @@ export function AudioPlayer() {
                                 </div>
                                 <div className="px-2">
                                   <p className="font-extrabold text-base truncate text-foreground group-hover:text-primary transition-colors">{single.title}</p>
-                                  <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground mt-1">{single.year}</p>
+                                  <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground mt-1 truncate">{single.year}</p>
                                 </div>
                               </div>
                             ))}
@@ -1806,14 +1792,14 @@ export function AudioPlayer() {
                   <div className="flex flex-col items-center justify-center py-32"><Loader2 className="h-12 w-12 animate-spin text-primary mb-4" /><p className="font-bold text-lg text-muted-foreground">Loading Album...</p></div>
                 ) : currentAlbumData ? (
                   <div className="animate-in fade-in duration-500">
-                    <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10 mb-12 p-6 md:p-10 bg-card/20 rounded-[3rem]">
-                      <img src={currentAlbumData.thumbnails?.[currentAlbumData.thumbnails.length-1]?.url || "/placeholder.svg"} alt={currentAlbumData.name} className="aspect-square w-56 h-56 md:w-72 md:h-72 rounded-[2.5rem] object-cover shadow-2xl" />
-                      <div className="text-center md:text-left flex-1 flex flex-col justify-end">
+                    <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10 mb-12 p-6 md:p-10 bg-card/20 rounded-[3rem] border border-border/30 shadow-sm">
+                      <img src={currentAlbumData.thumbnails?.[currentAlbumData.thumbnails.length-1]?.url || currentAlbumData.songs?.[0]?.thumbnail || "/placeholder.svg"} alt={currentAlbumData.name} className="aspect-square w-56 h-56 md:w-72 md:h-72 rounded-[2.5rem] object-cover shadow-2xl shrink-0" />
+                      <div className="text-center md:text-left flex-1 flex flex-col justify-end min-w-0">
                         <div className="flex items-center justify-center md:justify-start gap-2 text-primary font-bold text-sm mb-3 uppercase tracking-[0.2em]"><Disc3 className="h-5 w-5 text-current"/> Album</div>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-foreground leading-tight">{currentAlbumData.name}</h1>
-                        <p className="text-muted-foreground font-semibold mb-8 text-xl cursor-pointer hover:underline hover:text-primary transition-colors" onClick={() => currentAlbumData.songs[0]?.artistId && loadArtistView(currentAlbumData.songs[0].artistId)}>{currentAlbumData.artist} • {currentAlbumData.year}</p>
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-foreground leading-tight truncate">{currentAlbumData.name}</h1>
+                        <p className="text-muted-foreground font-semibold mb-8 text-xl cursor-pointer hover:underline hover:text-primary transition-colors truncate" onClick={() => currentAlbumData.songs[0]?.artistId && loadArtistView(currentAlbumData.songs[0].artistId)}>{currentAlbumData.artist} {currentAlbumData.year && `• ${currentAlbumData.year}`}</p>
                         <div className="flex gap-4 justify-center md:justify-start">
-                          <Button onClick={() => addToQueueAndPlay(currentAlbumData.songs[0])} className="rounded-[2rem] font-bold text-lg px-10 h-16 shadow-xl hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none flex items-center justify-center p-0">
+                          <Button onClick={() => currentAlbumData.songs?.length > 0 && addToQueueAndPlay(currentAlbumData.songs[0])} disabled={!currentAlbumData.songs?.length} className="rounded-[2rem] font-bold text-lg px-10 h-16 shadow-xl hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none flex items-center justify-center p-0">
                             <Play className="text-[28px] mr-3"/> Play Album
                           </Button>
                         </div>
@@ -1822,32 +1808,34 @@ export function AudioPlayer() {
                     
                     <div className="space-y-2 mb-14 bg-card p-3 md:p-6 rounded-[2.5rem] border shadow-sm">
                       {currentAlbumData.songs?.map((song: any, idx: number) => (
-                        <div key={song.videoId} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
-                          <span className="w-8 text-center font-bold text-muted-foreground/50">{idx + 1}</span>
-                          <div className="flex-1 min-w-0 pl-2">
-                            <p className="font-bold text-base truncate text-foreground">{song.title}</p>
-                            <p className="text-sm font-medium text-muted-foreground truncate mt-0.5">{song.artist}</p>
+                        <div key={song.videoId || idx} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
+                          <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm text-muted-foreground/50 shrink-0">{idx + 1}</span>
+                          <div className="flex-1 min-w-0 px-2">
+                            <p className="font-bold text-sm sm:text-base truncate text-foreground leading-tight">{song.title}</p>
+                            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate mt-0.5">{song.artist}</p>
                           </div>
-                          <span className="text-sm font-bold tabular-nums text-muted-foreground/50 mr-2">{formatTime(song.duration)}</span>
+                          <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground/50 mr-2 shrink-0">{formatTime(song.duration)}</span>
                           
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none"><ListPlus className="h-6 w-6 text-current" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
-                              <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
-                              {playlists.map(pl => (
-                                <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-full text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity outline-none focus:outline-none"><ListPlus className="h-5 w-5 sm:h-6 sm:w-6 text-current" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
+                                <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
+                                {playlists.map(pl => (
+                                  <DropdownMenuItem key={pl.id} onSelect={() => addSongToPlaylist(pl.id, song)} className="font-semibold cursor-pointer rounded-xl py-3 transition-all active:scale-[0.98] text-foreground"><ListMusic className="mr-3 h-4 w-4 text-primary"/>{pl.name}</DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
 
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-12 w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
-                            <Play className="text-[20px] translate-x-[1px]"/>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-12 w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
-                            <Heart className={cn("h-6 w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
-                          </Button>
+                            <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-10 w-10 sm:h-12 sm:w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
+                              <Play className="text-[18px] sm:text-[20px] translate-x-[1px]"/>
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-10 w-10 sm:h-12 sm:w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                              <Heart className={cn("h-5 w-5 sm:h-6 sm:w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1862,13 +1850,13 @@ export function AudioPlayer() {
                   <SkipBack className="h-5 w-5" /> Back to Library
                 </Button>
                 <div className="animate-in fade-in duration-500">
-                  <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10 mb-12 p-6 md:p-10 bg-card/20 rounded-[3rem]">
-                    <div className="w-56 h-56 md:w-72 md:h-72 rounded-[2.5rem] object-cover shadow-2xl bg-primary/10 flex items-center justify-center">
+                  <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10 mb-12 p-6 md:p-10 bg-card/20 rounded-[3rem] border border-border/30 shadow-sm">
+                    <div className="w-56 h-56 md:w-72 md:h-72 rounded-[2.5rem] object-cover shadow-2xl bg-primary/10 flex items-center justify-center shrink-0">
                       <ListMusic className="h-24 w-24 text-primary" />
                     </div>
-                    <div className="text-center md:text-left flex-1 flex flex-col justify-end">
+                    <div className="text-center md:text-left flex-1 flex flex-col justify-end min-w-0">
                       <div className="flex items-center justify-center md:justify-start gap-2 text-primary font-bold text-sm mb-3 uppercase tracking-[0.2em]"><ListPlus className="h-5 w-5 text-current"/> Playlist</div>
-                      <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-foreground leading-tight">{currentPlaylistView.name}</h1>
+                      <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-foreground leading-tight truncate">{currentPlaylistView.name}</h1>
                       <p className="text-muted-foreground font-semibold mb-8 text-xl">{currentPlaylistView.songs.length} songs</p>
                       <div className="flex gap-4 justify-center md:justify-start">
                         <Button onClick={() => {if(currentPlaylistView.songs.length>0) addToQueueAndPlay(currentPlaylistView.songs[0])}} disabled={currentPlaylistView.songs.length===0} className="rounded-[2rem] font-bold text-lg px-10 h-16 shadow-xl hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground outline-none focus:outline-none flex items-center justify-center p-0">
@@ -1881,21 +1869,23 @@ export function AudioPlayer() {
                   {currentPlaylistView.songs.length > 0 ? (
                     <div className="space-y-2 mb-14 bg-card p-3 md:p-6 rounded-[2.5rem] border shadow-sm">
                       {currentPlaylistView.songs.map((song: any, idx: number) => (
-                        <div key={song.videoId} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
-                          <span className="w-8 text-center font-bold text-muted-foreground/50">{idx + 1}</span>
-                          <img src={song.thumbnail} className={cn("aspect-square h-14 w-14 rounded-[1rem] object-cover shadow-sm", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
-                          <div className="flex-1 min-w-0 pr-2">
-                            <p className="font-bold text-base truncate text-foreground">{song.title}</p>
-                            <p className="text-sm font-medium text-muted-foreground truncate mt-0.5">{song.artist}</p>
+                        <div key={song.videoId || idx} className="group flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-[1.5rem] hover:bg-muted/80 transition-colors duration-300 ease-out">
+                          <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm text-muted-foreground/50 shrink-0">{idx + 1}</span>
+                          <img src={song.thumbnail} className={cn("aspect-square h-12 w-12 sm:h-14 sm:w-14 rounded-[1rem] object-cover shadow-sm shrink-0", !reduceMotion && "transition-transform duration-500 group-hover:scale-105")} />
+                          <div className="flex-1 min-w-0 px-2">
+                            <p className="font-bold text-sm sm:text-base truncate text-foreground leading-tight">{song.title}</p>
+                            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate mt-0.5">{song.artist}</p>
                           </div>
-                          <span className="text-sm font-bold tabular-nums text-muted-foreground/50 mr-4">{formatTime(song.duration)}</span>
+                          <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground/50 mr-2 shrink-0">{formatTime(song.duration)}</span>
                           
-                          <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-12 w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
-                            <Play className="text-[20px] translate-x-[1px]"/>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-12 w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
-                            <Heart className={cn("h-6 w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
-                          </Button>
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
+                            <Button variant="secondary" size="icon" onClick={() => addToQueueAndPlay(song)} className="rounded-full font-bold opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-95 shadow-md text-foreground h-10 w-10 sm:h-12 sm:w-12 bg-secondary hover:bg-secondary/80 outline-none focus:outline-none flex items-center justify-center p-0">
+                              <Play className="text-[18px] sm:text-[20px] translate-x-[1px]"/>
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className={cn("text-muted-foreground hover:text-[var(--google-red)] transition-all outline-none focus:outline-none flex items-center justify-center p-0 h-10 w-10 sm:h-12 sm:w-12 rounded-full", likedSongs.has(song.videoId) && "text-[var(--google-red)]")}>
+                              <Heart className={cn("h-5 w-5 sm:h-6 sm:w-6", likedSongs.has(song.videoId) && "fill-current text-current")} />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1908,7 +1898,7 @@ export function AudioPlayer() {
                   )}
                 </div>
              </div>
-          ) :['player', 'lyrics', 'queue', 'library'].includes(activeTab) ? (
+          ) : ['player', 'lyrics', 'queue', 'library'].includes(activeTab) ? (
             <div className="flex flex-1 flex-col items-center px-4 py-8 md:px-8 md:py-12 relative min-h-full">
               {loadError && (
                 <div className="absolute top-4 bg-destructive/90 text-destructive-foreground px-6 py-3 rounded-2xl font-bold text-sm shadow-xl z-50 animate-in fade-in slide-in-from-top-4 text-center mx-4">
@@ -1932,11 +1922,9 @@ export function AudioPlayer() {
           ) : null}
         </div>
 
-        {/* Desktop Sidebar - Queue, Lyrics, Library */}
+        {/* Desktop Sidebar */}
         <div className="hidden w-80 flex-col border-l border-border/40 bg-card/40 backdrop-blur-2xl lg:flex xl:w-[420px] overflow-hidden min-h-0 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-20 transition-all duration-500">
           <div className="flex p-3 gap-2 bg-muted/20 border-b border-border/40 flex-wrap transition-colors duration-300 relative">
-            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-muted/20 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-muted/20 to-transparent z-10 pointer-events-none" />
             <div className="flex w-full overflow-x-auto no-scrollbar gap-2 px-2 snap-x">
               {['player', 'explore', 'queue', 'lyrics', 'library'].map((tab) => (
                 <button
@@ -1959,7 +1947,7 @@ export function AudioPlayer() {
           </div>
 
           <div className={cn(
-            "flex-1 min-h-0 overscroll-contain transition-all duration-500",['lyrics', 'queue', 'library'].includes(activeTab) ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+            "flex-1 min-h-0 overscroll-contain transition-all duration-500", ['lyrics', 'queue', 'library'].includes(activeTab) ? "overflow-hidden flex flex-col" : "overflow-y-auto"
           )}>
             {activeTab === 'explore' || activeTab === 'artist' || activeTab === 'player' || activeTab === 'album' || activeTab === 'playlistView' ? (
               <div className="flex flex-col items-center justify-center h-full p-6 text-center">
@@ -1990,7 +1978,6 @@ export function AudioPlayer() {
             ) : activeTab === 'library' ? (
                <div className="h-full w-full relative overflow-hidden" style={{ isolation: 'isolate', maskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)' }}>
                  <div className="h-full w-full p-4 space-y-8 pb-32 animate-in slide-in-from-bottom-8 duration-700 ease-out overflow-y-auto overscroll-contain no-scrollbar">
-                  {/* Playlists Section */}
                   <div>
                     <div className="mb-5 px-3 flex items-center justify-between">
                       <h3 className="font-extrabold text-xl flex items-center gap-3 text-foreground"><ListPlus className="h-6 w-6 text-primary"/> Playlists</h3>
@@ -2000,9 +1987,9 @@ export function AudioPlayer() {
                       <div className="space-y-3">
                         {playlists.map((playlist) => (
                           <div key={playlist.id} onClick={() => loadPlaylistView(playlist)} className="flex items-center gap-4 p-4 rounded-[1.5rem] bg-muted/40 hover:bg-muted/80 transition-colors cursor-pointer text-foreground">
-                            <div className="h-14 w-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black shadow-sm"><ListMusic className="h-6 w-6 text-current"/></div>
-                            <div>
-                              <p className="font-bold text-base">{playlist.name}</p>
+                            <div className="h-14 w-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black shadow-sm shrink-0"><ListMusic className="h-6 w-6 text-current"/></div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-base truncate">{playlist.name}</p>
                               <p className="text-sm font-medium text-muted-foreground mt-0.5">{playlist.songs.length} songs</p>
                             </div>
                           </div>
@@ -2013,7 +2000,6 @@ export function AudioPlayer() {
                     )}
                   </div>
 
-                  {/* Liked Songs Section */}
                   <div>
                     <div className="mb-5 px-3 flex items-center justify-between">
                       <h3 className="font-extrabold text-xl flex items-center gap-3 text-foreground"><Heart className="h-6 w-6 text-[var(--google-red)] fill-current"/> Liked Songs</h3>
@@ -2022,18 +2008,17 @@ export function AudioPlayer() {
                       <div className="space-y-3">
                         {savedSongs.map((song, index) => (
                           <div key={`lib-${song.videoId}-${index}`} className="group flex items-center gap-3 rounded-[1.5rem] p-3 transition-all duration-300 hover:bg-muted/80">
-                            <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-4 text-left outline-none min-w-0">
+                            <button onClick={() => playFromLibrary(song)} className="flex flex-1 items-center gap-3 sm:gap-4 text-left outline-none min-w-0">
                               <img src={song.thumbnail} className={cn("aspect-square rounded-[1rem] object-cover shadow-sm shrink-0", !reduceMotion && "transition-transform duration-500 group-hover:scale-105", compactQueue ? "h-12 w-12" : "h-14 w-14")} />
-                              <div className="flex-1 overflow-hidden">
+                              <div className="flex-1 min-w-0 overflow-hidden pr-2">
                                 <p className={cn("truncate font-bold leading-tight text-foreground transition-colors", compactQueue ? "text-sm" : "text-base")}>{song.title}</p>
                                 <p className={cn("truncate font-semibold text-muted-foreground transition-colors", compactQueue ? "text-xs mt-0.5" : "text-sm mt-1")}>{song.artist}</p>
                               </div>
                             </button>
-                            {/* Playlist Add Button Dropdown */}
                             {playlists.length > 0 && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary outline-none focus:outline-none"><ListPlus className="h-5 w-5 text-current" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary outline-none focus:outline-none shrink-0"><ListPlus className="h-5 w-5 text-current" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                                   <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
@@ -2043,7 +2028,7 @@ export function AudioPlayer() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-10 w-10 rounded-full text-[var(--google-red)] opacity-100 flex items-center justify-center transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90 outline-none focus:outline-none p-0">
+                            <Button variant="ghost" size="icon" onClick={() => toggleLike(song)} className="h-10 w-10 rounded-full text-[var(--google-red)] opacity-100 flex items-center justify-center transition-all duration-300 hover:bg-[var(--google-red)]/10 active:scale-90 outline-none focus:outline-none p-0 shrink-0">
                               <Heart className="h-5 w-5 fill-current text-current transition-transform duration-500 hover:scale-110" />
                             </Button>
                           </div>
@@ -2061,9 +2046,9 @@ export function AudioPlayer() {
                   {queue.length > 0 ? (
                   queue.map((song, index) => (
                     <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-3 rounded-[1.5rem] transition-all duration-300 hover:bg-muted/80", index === currentIndex ? "bg-primary/10 shadow-sm border border-primary/20 scale-[1.02]" : "border border-transparent", compactQueue ? "p-2" : "p-3")}>
-                      <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-4 text-left outline-none min-w-0">
+                      <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-3 sm:gap-4 text-left outline-none min-w-0">
                         <div className={cn("relative flex-shrink-0 overflow-hidden rounded-[1rem] shadow-sm", compactQueue ? "h-12 w-12" : "h-14 w-14")}><img src={song.thumbnail} className="aspect-square h-full w-full object-cover" /></div>
-                        <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex-1 min-w-0 overflow-hidden pr-2">
                           <p className={cn("truncate font-bold leading-tight", index === currentIndex ? "text-primary" : "text-foreground", compactQueue ? "text-sm" : "text-base")}>{song.title}</p>
                           <p className={cn("truncate font-semibold text-muted-foreground mt-0.5", compactQueue ? "text-[10px]" : "text-xs")}>{song.artist}</p>
                         </div>
@@ -2072,7 +2057,7 @@ export function AudioPlayer() {
                       {playlists.length > 0 && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity outline-none focus:outline-none"><ListPlus className="h-5 w-5 text-current" /></Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity outline-none focus:outline-none shrink-0"><ListPlus className="h-5 w-5 text-current" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-[1.5rem] p-2 z-[300]">
                             <DropdownMenuItem disabled className="font-extrabold text-[10px] tracking-widest uppercase text-muted-foreground/70 px-3 py-1">Add to Playlist</DropdownMenuItem>
@@ -2083,7 +2068,7 @@ export function AudioPlayer() {
                         </DropdownMenu>
                       )}
 
-                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100 outline-none focus:outline-none p-0"><X className="h-5 w-5 text-current" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-10 w-10 rounded-full opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-destructive/10 text-destructive focus:opacity-100 outline-none focus:outline-none p-0 shrink-0"><X className="h-5 w-5 text-current" /></Button>
                     </div>
                   ))
                 ) : (
@@ -2096,7 +2081,7 @@ export function AudioPlayer() {
         </div>
       </div>
 
-      {/* --- MINI BOTTOM PLAYER (Mobile) --- */}
+      {/* Mini Player */}
       {currentSong && !isMobilePlayerExpanded && (
         <div className="fixed bottom-3 left-3 right-3 z-[150] transition-all duration-500 ease-out lg:hidden">
           <div onClick={() => setIsMobilePlayerExpanded(true)} className="flex items-center gap-2 rounded-[2rem] bg-card/95 p-2 backdrop-blur-xl border border-border/50 shadow-[0_10px_40px_rgba(0,0,0,0.2)] transition-all duration-500 cursor-pointer active:scale-[0.98]">
@@ -2120,7 +2105,7 @@ export function AudioPlayer() {
         </div>
       )}
 
-      {/* --- EXPANDABLE MOBILE PLAYER OVERLAY --- */}
+      {/* Expandable Mobile Player */}
       <div 
         className={cn(
           "fixed inset-0 z-[190] bg-black/60 backdrop-blur-sm transition-opacity duration-500 ease-out lg:hidden",
@@ -2161,15 +2146,12 @@ export function AudioPlayer() {
           </div>
         )}
 
-        {/* Mobile App Header Bar */}
         <div className="flex items-center justify-between p-4 mt-2 relative z-50">
           <Button variant="ghost" size="icon" onClick={() => setIsMobilePlayerExpanded(false)} className="h-12 w-12 rounded-full hover:bg-muted/50 active:scale-90 text-foreground outline-none focus:outline-none">
             <ChevronDown className="h-8 w-8 text-current" />
           </Button>
           
           <div className="flex bg-muted/60 rounded-full p-1.5 gap-1.5 relative shadow-sm">
-            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background/50 to-transparent pointer-events-none rounded-l-full" />
-            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background/50 to-transparent pointer-events-none rounded-r-full" />
             <Button variant={mobilePlayerTab === 'player' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('player')} className="rounded-full px-5 font-bold text-sm text-foreground outline-none focus:outline-none">Player</Button>
             <Button variant={mobilePlayerTab === 'lyrics' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('lyrics')} className="rounded-full px-5 font-bold text-sm text-foreground outline-none focus:outline-none">Lyrics</Button>
             <Button variant={mobilePlayerTab === 'queue' ? 'default' : 'ghost'} size="sm" onClick={() => setMobilePlayerTab('queue')} className="rounded-full px-5 font-bold text-sm text-foreground outline-none focus:outline-none">Queue</Button>
@@ -2190,8 +2172,6 @@ export function AudioPlayer() {
         </div>
 
         <div className="flex-1 min-h-0 relative w-full z-0">
-          
-          {/* PLAYER TAB */}
           <div className={cn(
             "absolute inset-0 flex flex-col z-10 transition-opacity duration-300", 
             mobilePlayerTab === 'player' ? "opacity-100 pointer-events-auto overflow-y-auto no-scrollbar" : "opacity-0 pointer-events-none overflow-hidden"
@@ -2206,7 +2186,6 @@ export function AudioPlayer() {
             )}
           </div>
 
-          {/* LYRICS TAB */}
           <div 
             className={cn(
               "absolute inset-0 z-10 transition-opacity duration-300 overflow-hidden",
@@ -2237,7 +2216,6 @@ export function AudioPlayer() {
              </div>
           </div>
 
-          {/* QUEUE TAB */}
           <div 
             className={cn(
               "absolute inset-0 z-10 transition-opacity duration-300 overflow-hidden",
@@ -2254,14 +2232,14 @@ export function AudioPlayer() {
                <div className="space-y-4">
                  {queue.map((song, index) => (
                    <div key={`${song.videoId}-${index}`} className={cn("group flex items-center gap-4 rounded-[1.5rem] transition-all duration-300", index === currentIndex ? "bg-primary/10 shadow-sm border border-primary/20" : "hover:bg-muted/80", compactQueue ? "p-2" : "p-3")}>
-                     <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-5 text-left outline-none min-w-0">
+                     <button onClick={() => setCurrentIndex(index)} className="flex flex-1 items-center gap-4 text-left outline-none min-w-0">
                        <img src={song.thumbnail} className={cn("aspect-square rounded-[1rem] object-cover shadow-sm flex-shrink-0", compactQueue ? "h-14 w-14" : "h-16 w-16")} />
-                       <div className="flex-1 min-w-0 overflow-hidden">
-                         <p className={cn("truncate font-bold", index === currentIndex ? "text-primary" : "text-foreground", compactQueue ? "text-base" : "text-lg")}>{song.title}</p>
+                       <div className="flex-1 min-w-0 overflow-hidden pr-2">
+                         <p className={cn("truncate font-bold leading-tight", index === currentIndex ? "text-primary" : "text-foreground", compactQueue ? "text-base" : "text-lg")}>{song.title}</p>
                          <p className={cn("truncate font-semibold text-muted-foreground mt-0.5", compactQueue ? "text-xs" : "text-sm")}>{song.artist}</p>
                        </div>
                      </button>
-                     <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10 hover:bg-destructive/20 outline-none focus:outline-none p-0"><X className="h-6 w-6 text-current" /></Button>
+                     <Button variant="ghost" size="icon" onClick={() => removeFromQueue(index)} className="h-12 w-12 rounded-full text-destructive bg-destructive/10 hover:bg-destructive/20 outline-none focus:outline-none p-0 shrink-0"><X className="h-6 w-6 text-current" /></Button>
                    </div>
                  ))}
                </div>
@@ -2271,66 +2249,59 @@ export function AudioPlayer() {
         </div>
       </div>
 
-      {/* --- ALL DIALOGS (SETTINGS, EFFECTS, AUTH, PLAYLISTS, CREDITS) --- */}
-      
+      {/* --- COLOR PALETTE DIALOG --- */}
       <Dialog open={showColorPalette} onOpenChange={setShowColorPalette}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[500] max-h-[85dvh] overflow-hidden flex flex-col">
-          <div className="flex items-center gap-4 p-6 shrink-0">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[500] max-h-[85svh] overflow-hidden flex flex-col">
+          <div className="flex items-center gap-4 p-4 sm:p-6 border-b bg-card/40 backdrop-blur-md shrink-0">
             <Button variant="ghost" size="icon" onClick={() => setShowColorPalette(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
-            <h2 className="text-2xl font-black text-foreground tracking-tight">Color Palette</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">Color Palette</h2>
           </div>
-          <div className="px-8 flex-1 overflow-y-auto no-scrollbar pb-8">
+          <div className="p-4 sm:p-6 flex-1 overflow-y-auto overscroll-contain no-scrollbar pb-10">
             
             {/* Preview Card */}
-            <div className="w-full h-64 rounded-[2rem] relative shadow-xl mb-10 flex flex-col justify-between p-8 transition-colors duration-500 overflow-hidden" style={{ backgroundColor: colorTheme === 'default' ? '#0f172a' : activeTheme.secondary }}>
+            <div className="w-full h-52 sm:h-60 rounded-[2rem] relative shadow-xl mb-8 flex flex-col justify-between p-6 sm:p-8 transition-colors duration-500 overflow-hidden shrink-0" style={{ backgroundColor: colorTheme === 'default' ? '#0f172a' : activeTheme.secondary }}>
                <div className="flex justify-between items-start z-10 relative w-full">
-                  <div className="space-y-4 w-1/2">
-                     <div className="w-14 h-12 rounded-xl bg-white/20 backdrop-blur-md shadow-sm" />
+                  <div className="space-y-3 w-1/2">
+                     <div className="w-12 h-10 rounded-xl bg-white/20 backdrop-blur-md shadow-sm" />
                      <div className="flex items-center">
                         <div className="w-3/4 h-2 rounded-l-full bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
                         <div className="w-1/4 h-2 rounded-r-full bg-white/20" />
                      </div>
                   </div>
                   
-                  <div className="w-16 h-16 shrink-0 rounded-[1.5rem] flex items-center justify-center shadow-lg bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }}>
-                     <Play className="text-[32px] text-white" />
+                  <div className="w-14 h-14 shrink-0 rounded-[1.25rem] flex items-center justify-center shadow-lg bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }}>
+                     <Play className="text-[28px] text-white" />
                   </div>
                </div>
                
-               {/* Center overlapping circles */}
                <div className="absolute inset-0 m-auto w-fit h-fit flex items-center justify-center z-0">
-                  <div className="w-24 h-24 rounded-full shadow-md bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
-                  <div className="w-16 h-16 rounded-full shadow-md -ml-8 bg-white/80 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
-                  <div className="w-10 h-10 rounded-full shadow-md -ml-6 bg-white/60 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
+                  <div className="w-20 h-20 rounded-full shadow-md bg-white transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
+                  <div className="w-14 h-14 rounded-full shadow-md -ml-6 bg-white/80 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
+                  <div className="w-8 h-8 rounded-full shadow-md -ml-4 bg-white/60 transition-colors duration-500" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }} />
                </div>
 
-               {/* Bottom pills */}
-               <div className="flex gap-3 z-10 relative">
-                  <div className="w-16 h-10 rounded-[1rem] bg-white/10 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-white" /></div>
-                  <div className="w-16 h-10 rounded-[1rem] bg-white/10 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-white" /></div>
+               <div className="flex gap-2 z-10 relative">
+                  <div className="w-12 h-8 rounded-[0.8rem] bg-white/10 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-white" /></div>
+                  <div className="w-12 h-8 rounded-[0.8rem] bg-white/10 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-white" /></div>
                </div>
                
-               {/* Label badge */}
-               <div className="absolute bottom-0 right-0 px-5 py-3 rounded-tl-3xl font-bold text-sm transition-colors duration-500 shadow-xl bg-white text-white uppercase tracking-widest" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }}>
+               <div className="absolute bottom-0 right-0 px-4 py-2 rounded-tl-2xl font-bold text-xs transition-colors duration-500 shadow-xl bg-white text-white uppercase tracking-widest" style={{ backgroundColor: colorTheme === 'default' ? '#38bdf8' : activeTheme.primary }}>
                   {activeTheme.name || 'Default'}
                </div>
             </div>
 
-            {/* Swatch Carousel */}
-            <div className="relative w-full mb-10">
-               <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent z-20 pointer-events-none" />
-               <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent z-20 pointer-events-none" />
-               
-               <div className="flex overflow-x-auto gap-4 py-2 no-scrollbar snap-x z-10">
+            {/* Swatches */}
+            <div className="relative w-full mb-8">
+               <div className="flex overflow-x-auto gap-3 py-2 no-scrollbar snap-x z-10">
                   {ALL_THEMES.map(theme => (
-                    <div key={theme.id} onClick={() => { setColorTheme(theme.id); localStorage.setItem('ganvo_color_theme', theme.id); }} className={cn("relative shrink-0 w-24 h-24 rounded-[2rem] flex items-center justify-center cursor-pointer transition-all active:scale-95 snap-center", colorTheme === theme.id ? "border-[4px] scale-105" : "border-2 border-transparent opacity-80 hover:opacity-100 bg-muted/30")} style={{ borderColor: colorTheme === theme.id ? (theme.primary || '#94a3b8') : undefined }}>
-                      <div className="w-16 h-16 rounded-full overflow-hidden flex transform -rotate-45 shadow-sm">
+                    <div key={theme.id} onClick={() => { setColorTheme(theme.id); localStorage.setItem('ganvo_color_theme', theme.id); }} className={cn("relative shrink-0 w-20 h-20 rounded-[1.5rem] flex items-center justify-center cursor-pointer transition-all active:scale-95 snap-center", colorTheme === theme.id ? "border-[3px] scale-105" : "border-2 border-transparent opacity-80 hover:opacity-100 bg-muted/30")} style={{ borderColor: colorTheme === theme.id ? (theme.primary || '#94a3b8') : undefined }}>
+                      <div className="w-14 h-14 rounded-full overflow-hidden flex transform -rotate-45 shadow-sm">
                          <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary || '#94a3b8' }} />
                          <div className="w-1/2 h-full" style={{ backgroundColor: theme.secondary || '#64748b' }} />
                       </div>
                       {colorTheme === theme.id && (
-                        <div className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center">
-                          <Check className="text-[16px]" style={{ color: theme.primary || '#0f172a' }} />
+                        <div className="absolute inset-0 m-auto w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center">
+                          <Check className="text-[14px]" style={{ color: theme.primary || '#0f172a' }} />
                         </div>
                       )}
                     </div>
@@ -2338,18 +2309,18 @@ export function AudioPlayer() {
                </div>
             </div>
 
-            <div className="flex flex-col gap-4 items-end">
-               <Button onClick={() => setShowCustomThemeDialog(true)} className="rounded-[1.5rem] w-full h-14 font-bold text-base bg-primary text-primary-foreground shadow-lg hover:scale-[1.02] active:scale-95 transition-all"><PaintBucket className="mr-3 w-5 h-5"/> Create Custom Theme</Button>
-               <Button onClick={() => setShowImportThemeDialog(true)} variant="secondary" className="rounded-[1.5rem] w-full h-14 font-bold text-base shadow-sm hover:scale-[1.02] active:scale-95 transition-all"><CloudDownload className="mr-3 w-5 h-5"/> Import Theme JSON</Button>
+            <div className="flex flex-col gap-3">
+               <Button onClick={() => setShowCustomThemeDialog(true)} className="rounded-[1.25rem] w-full h-12 sm:h-14 font-bold text-sm sm:text-base bg-primary text-primary-foreground shadow-lg hover:scale-[1.02] active:scale-95 transition-all"><PaintBucket className="mr-2.5 w-5 h-5"/> Create Custom Theme</Button>
+               <Button onClick={() => setShowImportThemeDialog(true)} variant="secondary" className="rounded-[1.25rem] w-full h-12 sm:h-14 font-bold text-sm sm:text-base shadow-sm hover:scale-[1.02] active:scale-95 transition-all"><CloudDownload className="mr-2.5 w-5 h-5"/> Import Theme JSON</Button>
             </div>
             
           </div>
         </DialogContent>
       </Dialog>
       
-      {/* Custom Theme Creation Dialog */}
+      {/* Custom Theme Creation */}
       <Dialog open={showCustomThemeDialog} onOpenChange={setShowCustomThemeDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-foreground">Custom Theme</DialogTitle>
             <DialogDescription className="font-medium text-base">Select your primary and secondary colors.</DialogDescription>
@@ -2381,9 +2352,9 @@ export function AudioPlayer() {
         </DialogContent>
       </Dialog>
 
-      {/* Import Theme Dialog */}
+      {/* Import Theme */}
       <Dialog open={showImportThemeDialog} onOpenChange={setShowImportThemeDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 bg-background !z-[550] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-foreground">Import Theme</DialogTitle>
             <DialogDescription className="font-medium text-base">Paste a theme JSON object.</DialogDescription>
@@ -2403,15 +2374,14 @@ export function AudioPlayer() {
         </DialogContent>
       </Dialog>
       
+      {/* Settings Dialog */}
       <Dialog open={showPlayerSettings} onOpenChange={setShowPlayerSettings}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[400] max-h-[85dvh] flex flex-col">
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b bg-card/50 backdrop-blur-sm shrink-0">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-0 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none overflow-hidden bg-background !z-[400] max-h-[85svh] flex flex-col">
+          <div className="flex items-center gap-4 p-4 sm:p-6 border-b bg-card/50 backdrop-blur-sm shrink-0">
             <Button variant="ghost" size="icon" onClick={() => setShowPlayerSettings(false)} className="rounded-full text-foreground outline-none focus:outline-none"><ArrowLeft className="w-6 h-6 text-current"/></Button>
-            <h2 className="text-2xl font-black tracking-tight text-foreground">Settings</h2>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Settings</h2>
           </div>
-          <div className="p-2 overflow-y-auto flex-1 no-scrollbar pb-10">
-             
-             {/* Appearance Settings */}
+          <div className="p-2 overflow-y-auto overscroll-contain flex-1 no-scrollbar pb-10">
              <div className="px-3 md:px-5 py-4 space-y-1">
                <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-3 uppercase tracking-widest ml-4 mt-2">Appearance</h3>
                <SettingsRow icon={Palette} title="Theme colors" desc={activeTheme.name || 'Default'} onClick={() => setShowColorPalette(true)}>
@@ -2440,7 +2410,6 @@ export function AudioPlayer() {
                </SettingsRow>
              </div>
              
-             {/* Player Settings */}
              <div className="px-3 md:px-5 py-4 space-y-1">
                <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-3 uppercase tracking-widest ml-4 mt-2">Player View</h3>
                <SettingsRow icon={Music2} title="Player style" desc="Main screen design.">
@@ -2499,7 +2468,6 @@ export function AudioPlayer() {
                </SettingsRow>
              </div>
              
-             {/* Audio Settings */}
              <div className="px-3 md:px-5 py-4 space-y-1">
                <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-3 uppercase tracking-widest ml-4 mt-2">Audio & Playback</h3>
                <SettingsRow icon={Speaker} title="Audio quality" desc="Streaming quality preset.">
@@ -2531,7 +2499,6 @@ export function AudioPlayer() {
                </SettingsRow>
              </div>
              
-             {/* Lyrics Settings */}
              <div className="px-3 md:px-5 py-4 space-y-1">
                <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-3 uppercase tracking-widest ml-4 mt-2">Lyrics</h3>
                <SettingsRow icon={Mic2} title="Auto-open lyrics" desc="Switch to lyrics when playing a song.">
@@ -2580,7 +2547,6 @@ export function AudioPlayer() {
                </SettingsRow>
              </div>
 
-             {/* Data Settings */}
              <div className="px-3 md:px-5 py-4 space-y-1">
                <h3 className="text-[11px] md:text-xs font-extrabold text-primary mb-3 uppercase tracking-widest ml-4 mt-2">Data & Privacy</h3>
                <SettingsRow icon={History} title="Save search history" desc="Remember your previous searches.">
@@ -2609,7 +2575,7 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none bg-background !z-[400] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none bg-background !z-[400] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <div className="mb-4 sm:mb-6 flex justify-center"><div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-primary/10 text-primary"><UserCircle2 className="h-10 w-10 text-current" /></div></div>
             <DialogTitle className="text-2xl sm:text-3xl font-black text-center text-foreground">Account Sync</DialogTitle>
@@ -2630,7 +2596,7 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showAccountSettings} onOpenChange={setShowAccountSettings}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3 sm:gap-4 text-foreground"><UserCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary"/> Account Details</DialogTitle>
           </DialogHeader>
@@ -2649,7 +2615,7 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showPlaylistDialog} onOpenChange={setShowPlaylistDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl sm:text-3xl font-black flex items-center gap-3 sm:gap-4 text-foreground"><ListPlus className="h-6 w-6 sm:h-8 sm:w-8 text-primary"/> New Playlist</DialogTitle>
           </DialogHeader>
@@ -2663,7 +2629,7 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showAboutDialog} onOpenChange={setShowAboutDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85svh] overflow-y-auto">
           <DialogHeader>
             <div className="mb-4 sm:mb-6 flex items-center gap-4 sm:gap-5">
               <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-primary shadow-xl"><Music2 className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground fill-current" /></div>
@@ -2692,7 +2658,7 @@ export function AudioPlayer() {
       </Dialog>
 
       <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
-        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="rounded-[2rem] sm:max-w-md p-6 sm:p-8 border-0 shadow-2xl animate-in zoom-in-95 duration-500 ease-out outline-none bg-background !z-[400] max-h-[85svh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-3 sm:gap-4 text-2xl sm:text-3xl font-black tracking-tight text-foreground"><Heart className="h-6 w-6 sm:h-8 sm:w-8 text-[var(--google-red)] fill-[var(--google-red)]" />Credits</DialogTitle></DialogHeader>
           <div className="space-y-4 sm:space-y-5 mt-4 sm:mt-6">
             <div className="rounded-2xl bg-muted/50 p-5 sm:p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
@@ -2703,9 +2669,9 @@ export function AudioPlayer() {
             <div className="rounded-2xl bg-muted/50 p-5 sm:p-6 transition-all duration-300 ease-out hover:scale-[1.02] hover:bg-muted hover:shadow-lg border border-transparent hover:border-border/50">
               <h4 className="mb-3 sm:mb-4 font-extrabold text-base sm:text-lg text-foreground uppercase tracking-wider">APIs & Services</h4>
               <ul className="space-y-3 sm:space-y-4 text-sm sm:text-base font-semibold text-muted-foreground">
-                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-blue-500 shadow-md" />ytmusic-api (YouTube Music search)</li>
+                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-blue-500 shadow-md" />InnerTube API Engine (Native YouTube Music search & metadata)</li>
                 <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-500 shadow-md" />LRCLIB & KuGou (Synchronized lyrics)</li>
-                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-yellow-500 shadow-md" />YouTube IFrame API (Native stream execution)</li>
+                <li className="flex items-center gap-3 sm:gap-4 group"><span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-yellow-500 shadow-md" />YouTube IFrame API (Native stream playback)</li>
               </ul>
             </div>
           </div>
